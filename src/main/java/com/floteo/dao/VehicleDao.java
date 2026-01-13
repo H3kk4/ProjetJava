@@ -4,31 +4,49 @@ import com.floteo.model.Vehicle;
 import com.floteo.model.VehicleStatus;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public final class VehicleDao {
+
     private final Connection conn;
 
     public VehicleDao(Connection conn) {
         this.conn = conn;
     }
 
-    public Vehicle create(String registration, String brand, String model, VehicleStatus status) throws SQLException {
+    public Vehicle create(
+            String plate,
+            String type,
+            String brand,
+            String model,
+            int mileage,
+            LocalDate acquisitionDate,
+            VehicleStatus status
+    ) throws SQLException {
+
         String sql = """
-      INSERT INTO vehicle(registration, brand, model, status)
-      VALUES (?, ?, ?, ?)
-      RETURNING id, registration, brand, model, status
-      """;
+            INSERT INTO vehicle
+              (plate, type, brand, model, mileage, acquisition_date, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            RETURNING id, plate, type, brand, model, mileage, acquisition_date, status
+            """;
+
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, registration);
-            ps.setString(2, brand);
-            ps.setString(3, model);
-            ps.setString(4, status.name());
+            ps.setString(1, plate);
+            ps.setString(2, type);
+            ps.setString(3, brand);
+            ps.setString(4, model);
+            ps.setInt(5, mileage);
+            ps.setDate(6, Date.valueOf(acquisitionDate));
+            ps.setString(7, status.name());
+
             try (ResultSet rs = ps.executeQuery()) {
                 rs.next();
                 return map(rs);
@@ -37,7 +55,12 @@ public final class VehicleDao {
     }
 
     public Optional<Vehicle> findById(long id) throws SQLException {
-        String sql = "SELECT id, registration, brand, model, status FROM vehicle WHERE id = ?";
+        String sql = """
+            SELECT id, plate, type, brand, model, mileage, acquisition_date, status
+            FROM vehicle
+            WHERE id = ?
+            """;
+
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -47,10 +70,15 @@ public final class VehicleDao {
         }
     }
 
-    public Optional<Vehicle> findByRegistration(String registration) throws SQLException {
-        String sql = "SELECT id, registration, brand, model, status FROM vehicle WHERE registration = ?";
+    public Optional<Vehicle> findByPlate(String plate) throws SQLException {
+        String sql = """
+            SELECT id, plate, type, brand, model, mileage, acquisition_date, status
+            FROM vehicle
+            WHERE plate = ?
+            """;
+
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, registration);
+            ps.setString(1, plate);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) return Optional.empty();
                 return Optional.of(map(rs));
@@ -59,27 +87,39 @@ public final class VehicleDao {
     }
 
     public List<Vehicle> findAll() throws SQLException {
-        String sql = "SELECT id, registration, brand, model, status FROM vehicle ORDER BY registration";
+        String sql = """
+            SELECT id, plate, type, brand, model, mileage, acquisition_date, status
+            FROM vehicle
+            ORDER BY plate
+            """;
+
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
+
             List<Vehicle> out = new ArrayList<>();
-            while (rs.next()) out.add(map(rs));
+            while (rs.next()) {
+                out.add(map(rs));
+            }
             return out;
         }
     }
 
     public List<Vehicle> findByStatus(VehicleStatus status) throws SQLException {
         String sql = """
-      SELECT id, registration, brand, model, status
-      FROM vehicle
-      WHERE status = ?
-      ORDER BY registration
-      """;
+            SELECT id, plate, type, brand, model, mileage, acquisition_date, status
+            FROM vehicle
+            WHERE status = ?
+            ORDER BY plate
+            """;
+
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status.name());
+
             try (ResultSet rs = ps.executeQuery()) {
                 List<Vehicle> out = new ArrayList<>();
-                while (rs.next()) out.add(map(rs));
+                while (rs.next()) {
+                    out.add(map(rs));
+                }
                 return out;
             }
         }
@@ -87,6 +127,7 @@ public final class VehicleDao {
 
     public boolean updateStatus(long id, VehicleStatus status) throws SQLException {
         String sql = "UPDATE vehicle SET status = ? WHERE id = ?";
+
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status.name());
             ps.setLong(2, id);
@@ -96,6 +137,7 @@ public final class VehicleDao {
 
     public boolean delete(long id) throws SQLException {
         String sql = "DELETE FROM vehicle WHERE id = ?";
+
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
             return ps.executeUpdate() == 1;
@@ -105,9 +147,12 @@ public final class VehicleDao {
     private static Vehicle map(ResultSet rs) throws SQLException {
         return new Vehicle(
                 rs.getLong("id"),
-                rs.getString("registration"),
+                rs.getString("plate"),
+                rs.getString("type"),
                 rs.getString("brand"),
                 rs.getString("model"),
+                rs.getInt("mileage"),
+                rs.getDate("acquisition_date").toLocalDate(),
                 VehicleStatus.valueOf(rs.getString("status"))
         );
     }

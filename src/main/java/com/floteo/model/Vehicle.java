@@ -1,3 +1,14 @@
 package com.floteo.model;
 
-public record Vehicle(long id, String registration, String brand, String model, VehicleStatus status) {}
+import java.time.LocalDate;
+
+public record Vehicle(
+        long id,
+        String plate,
+        String type,
+        String brand,
+        String model,
+        int mileage,
+        LocalDate acquisitionDate,
+        VehicleStatus status
+) {}

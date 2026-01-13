@@ -111,16 +111,34 @@ public final class ConsoleApp {
             System.out.println("(Aucun agent)");
             return;
         }
+
         agents.forEach(a ->
-                System.out.printf("- #%d %s %s (serviceId=%d)%n", a.id(), a.firstName(), a.lastName(), a.serviceId()));
+                System.out.printf(
+                        "- #%d [%s] %s %s (serviceId=%d)%n",
+                        a.id(),
+                        a.matricule(),
+                        a.firstName(),
+                        a.lastName(),
+                        a.serviceId()
+                )
+        );
     }
 
     private void createAgent() throws Exception {
+        String matricule = readNonEmpty("Matricule: ");
         String first = readNonEmpty("Prénom: ");
         String last = readNonEmpty("Nom: ");
         long serviceId = readLong("Service ID: ");
-        var a = agentDao.create(first, last, serviceId);
-        System.out.printf("Agent créé: #%d %s %s%n", a.id(), a.firstName(), a.lastName());
+
+        var a = agentDao.create(matricule, first, last, serviceId);
+
+        System.out.printf(
+                "Agent créé: #%d [%s] %s %s%n",
+                a.id(),
+                a.matricule(),
+                a.firstName(),
+                a.lastName()
+        );
     }
 
     // ---- Vehicles ----
@@ -131,18 +149,53 @@ public final class ConsoleApp {
             System.out.println("(Aucun véhicule)");
             return;
         }
+
         vehicles.forEach(v ->
-                System.out.printf("- #%d %s %s %s [%s]%n", v.id(), v.registration(), v.brand(), v.model(), v.status()));
+                System.out.printf(
+                        "- #%d %s | %s | %s %s | %d km | acquis le %s | [%s]%n",
+                        v.id(),
+                        v.plate(),
+                        v.type(),
+                        v.brand(),
+                        v.model(),
+                        v.mileage(),
+                        v.acquisitionDate(),
+                        v.status()
+                )
+        );
     }
 
+
     private void createVehicle() throws Exception {
-        String reg = readNonEmpty("Immatriculation: ");
+        String plate = readNonEmpty("Plaque d'immatriculation: ");
+        String type = readNonEmpty("Type de véhicule (ex: Voiture, Camion, Moto): ");
         String brand = readNonEmpty("Marque: ");
         String model = readNonEmpty("Modèle: ");
-        VehicleStatus status = readStatus("Statut (DISPONIBLE/AFFECTE/ENTRETIEN) [DISPONIBLE]: ", VehicleStatus.DISPONIBLE);
+        int mileage = readInt("Kilométrage: ");
+        LocalDate acquisitionDate =
+                readDateOrToday("Date d'acquisition (yyyy-MM-dd) [aujourd'hui]: ");
 
-        var v = vehicleDao.create(reg, brand, model, status);
-        System.out.printf("Véhicule créé: #%d %s%n", v.id(), v.registration());
+        VehicleStatus status = readStatus(
+                "Statut (DISPONIBLE/AFFECTE/ENTRETIEN) [DISPONIBLE]: ",
+                VehicleStatus.DISPONIBLE
+        );
+
+        var v = vehicleDao.create(
+                plate,
+                type,
+                brand,
+                model,
+                mileage,
+                acquisitionDate,
+                status
+        );
+
+        System.out.printf(
+                "Véhicule créé: #%d %s (%s)%n",
+                v.id(),
+                v.plate(),
+                v.type()
+        );
     }
 
     // ---- Assignments ----
