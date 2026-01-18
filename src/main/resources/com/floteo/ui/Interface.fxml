@@ -83,17 +83,17 @@
                               <Font name="Gloucester MT Extra Condensed" size="42.0" />
                            </font>
                         </Label>
-                        <Label id="nb-disponibles" fx:id="lblDisponibles" alignment="CENTER" contentDisplay="CENTER" layoutX="74.0" layoutY="257.0" prefHeight="140.0" prefWidth="147.0" style="-fx-background-color: #513a38; -fx-background-radius: 25; -fx-border-radius: 25;" text="30" textAlignment="CENTER" textFill="#fff9eb" textOverrun="CENTER_ELLIPSIS" wrapText="true">
+                        <Label id="nb-disponibles" fx:id="lblDisponibles" alignment="CENTER" contentDisplay="CENTER" layoutX="74.0" layoutY="257.0" prefHeight="140.0" prefWidth="147.0" style="-fx-background-color: #513a38; -fx-background-radius: 25; -fx-border-radius: 25;" textAlignment="CENTER" textFill="#fff9eb" textOverrun="CENTER_ELLIPSIS" wrapText="true">
                            <font>
                               <Font name="Gloucester MT Extra Condensed" size="80.0" />
                            </font>
                         </Label>
-                        <Label id="nb-indisponibles" fx:id="lblIndisponibles" alignment="CENTER" contentDisplay="CENTER" layoutX="400.0" layoutY="257.0" prefHeight="140.0" prefWidth="147.0" style="-fx-background-color: #513a38; -fx-background-radius: 25; -fx-border-radius: 25;" text="5" textAlignment="CENTER" textFill="#fff9eb" textOverrun="CENTER_ELLIPSIS" wrapText="true">
+                        <Label id="nb-indisponibles" fx:id="lblIndisponibles" alignment="CENTER" contentDisplay="CENTER" layoutX="400.0" layoutY="257.0" prefHeight="140.0" prefWidth="147.0" style="-fx-background-color: #513a38; -fx-background-radius: 25; -fx-border-radius: 25;" textAlignment="CENTER" textFill="#fff9eb" textOverrun="CENTER_ELLIPSIS" wrapText="true">
                            <font>
                               <Font name="Gloucester MT Extra Condensed" size="80.0" />
                            </font>
                         </Label>
-                        <Label id="nb-reserves" fx:id="lblReserves" alignment="CENTER" contentDisplay="CENTER" layoutX="741.0" layoutY="257.0" prefHeight="140.0" prefWidth="147.0" style="-fx-background-color: #513a38; -fx-background-radius: 25; -fx-border-radius: 25;" text="15" textAlignment="CENTER" textFill="#fff9eb" textOverrun="CENTER_ELLIPSIS" wrapText="true">
+                        <Label id="nb-reserves" fx:id="lblReserves" alignment="CENTER" contentDisplay="CENTER" layoutX="741.0" layoutY="257.0" prefHeight="140.0" prefWidth="147.0" style="-fx-background-color: #513a38; -fx-background-radius: 25; -fx-border-radius: 25;" textAlignment="CENTER" textFill="#fff9eb" textOverrun="CENTER_ELLIPSIS" wrapText="true">
                            <font>
                               <Font name="Gloucester MT Extra Condensed" size="80.0" />
                            </font>
@@ -124,7 +124,7 @@
                   </Pane>
                </children>
             </Pane>
-            <Pane layoutY="88.0" prefHeight="628.0" prefWidth="978.0" style="-fx-background-color: #fff9eb;">
+            <Pane layoutY="88.0" prefHeight="628.0" prefWidth="978.0" style="-fx-background-color: #fff9eb;" visible="false">
                <children>
                   <Pane id="gestion-vehicules-dashboard" fx:id="paneListeVehicules" layoutX="21.0" layoutY="17.0" prefHeight="594.0" prefWidth="937.0" style="-fx-background-color: #9fb2ac; -fx-background-radius: 25; -fx-border-radius: 25;">
                      <children>
@@ -294,23 +294,23 @@
             </Label>
             <Pane fx:id="paneMenuGestionAgents" layoutX="22.0" layoutY="121.0" prefHeight="565.0" prefWidth="937.0" style="-fx-background-color: #fff9eb; -fx-background-radius: 25;" visible="false">
                <children>
-                  <Button id="btn-affectation-agents" fx:id="btnAffecterAgents" graphicTextGap="8.0" layoutX="61.0" layoutY="384.0" mnemonicParsing="false" prefHeight="89.0" prefWidth="816.0" style="-fx-border-radius: 25; -fx-background-radius: 25; -fx-background-color: #513a38;" text="Affecter des agents" textAlignment="CENTER" textFill="#fff9eb" wrapText="true">
-                     <font>
-                        <Font name="Britannic Bold" size="42.0" />
-                     </font>
-                     <cursor>
-                        <Cursor fx:constant="DEFAULT" />
-                     </cursor>
-                  </Button>
-                  <Button id="btn-affectation-agents" fx:id="btnVoirDemandes" graphicTextGap="8.0" layoutX="61.0" layoutY="238.0" mnemonicParsing="false" prefHeight="89.0" prefWidth="816.0" style="-fx-border-radius: 25; -fx-background-radius: 25; -fx-background-color: #513a38;" text="Consulter les demandes de réservation" textAlignment="CENTER" textFill="#fff9eb" wrapText="true">
-                     <font>
-                        <Font name="Britannic Bold" size="42.0" />
-                     </font>
-                     <cursor>
-                        <Cursor fx:constant="DEFAULT" />
-                     </cursor>
-                  </Button>
                   <Button id="btn-affectation-agents" fx:id="btnListeAgents" graphicTextGap="8.0" layoutX="61.0" layoutY="93.0" mnemonicParsing="false" prefHeight="89.0" prefWidth="816.0" style="-fx-border-radius: 25; -fx-background-radius: 25; -fx-background-color: #513a38;" text="Voir la liste des agents" textAlignment="CENTER" textFill="#fff9eb" wrapText="true">
+                     <font>
+                        <Font name="Britannic Bold" size="42.0" />
+                     </font>
+                     <cursor>
+                        <Cursor fx:constant="DEFAULT" />
+                     </cursor>
+                  </Button>
+                  <Button id="btn-affectation-agents" fx:id="btnVoirDemandes" graphicTextGap="8.0" layoutX="61.0" layoutY="238.0" mnemonicParsing="false" prefHeight="89.0" prefWidth="816.0" style="-fx-border-radius: 25; -fx-background-radius: 25; -fx-background-color: #513a38;" text="Consulter les affectations" textAlignment="CENTER" textFill="#fff9eb" wrapText="true">
+                     <font>
+                        <Font name="Britannic Bold" size="42.0" />
+                     </font>
+                     <cursor>
+                        <Cursor fx:constant="DEFAULT" />
+                     </cursor>
+                  </Button>
+                  <Button id="btn-affectation-agents" fx:id="btnAffecterAgents" graphicTextGap="8.0" layoutX="61.0" layoutY="384.0" mnemonicParsing="false" prefHeight="89.0" prefWidth="816.0" style="-fx-border-radius: 25; -fx-background-radius: 25; -fx-background-color: #513a38;" text="Affecter des agents" textAlignment="CENTER" textFill="#fff9eb" wrapText="true">
                      <font>
                         <Font name="Britannic Bold" size="42.0" />
                      </font>
@@ -320,7 +320,223 @@
                   </Button>
                </children>
             </Pane>
-            <Pane layoutY="88.0" prefHeight="628.0" prefWidth="978.0" visible="false" />
+            <Pane fx:id="paneListeAgents" layoutY="88.0" prefHeight="628.0" prefWidth="978.0" style="-fx-background-color: #fff9eb;" visible="false">
+               <children>
+                  <Pane id="gestion-vehicules-dashboard" layoutX="21.0" layoutY="17.0" prefHeight="594.0" prefWidth="937.0" style="-fx-background-color: #9fb2ac; -fx-background-radius: 25; -fx-border-radius: 25;">
+                     <children>
+                        <Label layoutX="142.0" prefHeight="49.0" prefWidth="184.0" text="Liste des agents" textFill="#fff9eb">
+                           <font>
+                              <Font name="Gloucester MT Extra Condensed" size="41.0" />
+                           </font>
+                        </Label>
+                        <Pane id="liste-vehicules" layoutX="20.0" layoutY="46.0" prefHeight="530.0" prefWidth="427.0" style="-fx-background-color: #ffffff; -fx-background-radius: 25; -fx-border-radius: 25;">
+                           <children>
+                              <TableView fx:id="tabAgents" layoutX="14.0" layoutY="11.0" prefHeight="511.0" prefWidth="400.0">
+                                 <columns>
+                                    <TableColumn fx:id="colNomAgent" prefWidth="121.0" text="Nom" />
+                                    <TableColumn fx:id="colPrenomAgent" prefWidth="146.0" text="Prénom" />
+                                    <TableColumn fx:id="colMatAgent" prefWidth="132.0" text="Matricule" />
+                                 </columns>
+                              </TableView>
+                           </children>
+                        </Pane>
+                        <Label layoutX="567.0" prefHeight="49.0" prefWidth="273.0" text="Informations sur l'agent" textFill="#fff9eb">
+                           <font>
+                              <Font name="Gloucester MT Extra Condensed" size="41.0" />
+                           </font>
+                        </Label>
+                        <Pane layoutX="490.0" layoutY="46.0" prefHeight="530.0" prefWidth="427.0" style="-fx-background-color: #ffffff; -fx-background-radius: 25; -fx-border-radius: 25;">
+                           <children>
+                              <TabPane layoutX="14.0" layoutY="14.0" prefHeight="331.0" prefWidth="400.0" tabClosingPolicy="UNAVAILABLE">
+                                 <tabs>
+                                    <Tab text="Informations">
+                                       <content>
+                                          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="307.0" prefWidth="400.0">
+                                             <children>
+                                                <Label layoutX="14.0" layoutY="14.0" prefHeight="32.0" prefWidth="160.0" text="Nom">
+                                                   <font>
+                                                      <Font size="17.0" />
+                                                   </font>
+                                                </Label>
+                                                <Label layoutX="14.0" layoutY="62.0" prefHeight="32.0" prefWidth="160.0" text="Prénom :">
+                                                   <font>
+                                                      <Font size="17.0" />
+                                                   </font>
+                                                </Label>
+                                                <Label layoutX="14.0" layoutY="110.0" prefHeight="32.0" prefWidth="160.0" text="Matricule :">
+                                                   <font>
+                                                      <Font size="17.0" />
+                                                   </font>
+                                                </Label>
+                                                <TextField fx:id="tfNomAgent" editable="false" layoutX="226.0" layoutY="11.0" prefHeight="34.0" prefWidth="160.0">
+                                                   <font>
+                                                      <Font size="17.0" />
+                                                   </font>
+                                                </TextField>
+                                                <TextField fx:id="tPrenomAgent" editable="false" layoutX="226.0" layoutY="59.0" prefHeight="25.0" prefWidth="160.0">
+                                                   <font>
+                                                      <Font size="17.0" />
+                                                   </font>
+                                                </TextField>
+                                                <TextField fx:id="tfMatAgent" editable="false" layoutX="226.0" layoutY="107.0" prefHeight="25.0" prefWidth="160.0">
+                                                   <font>
+                                                      <Font size="17.0" />
+                                                   </font>
+                                                </TextField>
+                                                <Label layoutX="14.0" layoutY="159.0" prefHeight="32.0" prefWidth="160.0" text="Service :">
+                                                   <font>
+                                                      <Font size="17.0" />
+                                                   </font>
+                                                </Label>
+                                                <ComboBox fx:id="comboServiceAgent" layoutX="226.0" layoutY="158.0" prefHeight="34.0" prefWidth="160.0" style="-fx-background-color: #ffffff; -fx-border-color: #0c0c0c; -fx-background-radius: 10; -fx-border-radius: 10;" />
+                                             </children>
+                                          </AnchorPane>
+                                       </content>
+                                    </Tab>
+                                    <Tab text="Actions">
+                                       <content>
+                                          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                             <children>
+                                                <Button fx:id="btnAffecterVehicule" layoutX="105.0" layoutY="35.0" mnemonicParsing="false" prefHeight="41.0" prefWidth="207.0" style="-fx-border-radius: 15; -fx-background-radius: 15;" text="Affecter à un véhicule">
+                                                   <font>
+                                                      <Font size="17.0" />
+                                                   </font>
+                                                </Button>
+                                                <Button fx:id="btnAffecterVehicule1" layoutX="105.0" layoutY="90.0" mnemonicParsing="false" prefHeight="41.0" prefWidth="207.0" style="-fx-border-radius: 15; -fx-background-radius: 15;" text="Retirer d'une affectation">
+                                                   <font>
+                                                      <Font size="17.0" />
+                                                   </font>
+                                                </Button>
+                                             </children>
+                                          </AnchorPane>
+                                       </content>
+                                    </Tab>
+                                 </tabs>
+                              </TabPane>
+                              <Button fx:id="btnModifierAgent" layoutX="14.0" layoutY="466.0" mnemonicParsing="false" prefHeight="41.0" prefWidth="120.0" style="-fx-border-radius: 15; -fx-background-radius: 15;" text="Modifier">
+                                 <font>
+                                    <Font size="17.0" />
+                                 </font>
+                              </Button>
+                              <Button fx:id="btnSupprimerAgent" layoutX="293.0" layoutY="466.0" mnemonicParsing="false" prefHeight="41.0" prefWidth="120.0" style="-fx-border-radius: 15; -fx-background-color: #5d0d18; -fx-background-radius: 15;" text="Supprimer" textFill="#fff9eb">
+                                 <font>
+                                    <Font size="17.0" />
+                                 </font>
+                              </Button>
+                              <Button fx:id="btnSauvegarderAgent" layoutX="154.0" layoutY="466.0" mnemonicParsing="false" prefHeight="41.0" prefWidth="120.0" style="-fx-border-radius: 15; -fx-background-radius: 15;" text="Sauvegarder">
+                                 <font>
+                                    <Font size="17.0" />
+                                 </font>
+                              </Button>
+                              <Button fx:id="btnAjouterAgent" layoutX="154.0" layoutY="419.0" mnemonicParsing="false" prefHeight="41.0" prefWidth="120.0" style="-fx-border-radius: 15; -fx-background-radius: 15;" text="Ajouter">
+                                 <font>
+                                    <Font size="17.0" />
+                                 </font>
+                              </Button>
+                           </children>
+                        </Pane>
+                     </children>
+                  </Pane>
+               </children></Pane>
+            <Pane fx:id="paneDemandeResa" layoutY="88.0" prefHeight="628.0" prefWidth="978.0" style="-fx-background-color: #fff9eb;" visible="false">
+               <children>
+                  <Pane layoutX="22.0" layoutY="22.0" prefHeight="588.0" prefWidth="937.0" style="-fx-background-color: #9fb2ac; -fx-background-radius: 25;">
+                     <children>
+                        <Label layoutX="322.0" layoutY="14.0" prefHeight="60.0" prefWidth="294.0" text="Liste des affectations" textAlignment="CENTER" textFill="#fff9eb">
+                           <font>
+                              <Font name="Gloucester MT Extra Condensed" size="50.0" />
+                           </font>
+                        </Label>
+                        <TableView layoutX="15.0" layoutY="117.0" prefHeight="453.0" prefWidth="735.0">
+                          <columns>
+                            <TableColumn fx:id="colDRDateDemande" prefWidth="126.0" text="Date de la demande" />
+                            <TableColumn fx:id="colDRAgent" prefWidth="98.0" text="Agent" />
+                              <TableColumn fx:id="colDRVehicule" prefWidth="105.0" text="Véhicule" />
+                              <TableColumn fx:id="colDRImat" prefWidth="110.0" text="Immatriculation" />
+                              <TableColumn fx:id="colDRDateDepart" prefWidth="106.0" text="Date départ" />
+                              <TableColumn fx:id="colDRDateRetour" prefWidth="116.0" text="Date retour" />
+                              <TableColumn fx:id="colAStatus" prefWidth="75.0" text="Status" />
+                          </columns>
+                        </TableView>
+                        <Button fx:id="btnAccepter" layoutX="776.0" layoutY="393.0" mnemonicParsing="false" prefHeight="80.0" prefWidth="147.0" style="-fx-background-color: #fff9eb; -fx-background-radius: 15;" text="Accepter" textFill="#513a38">
+                           <font>
+                              <Font name="Gloucester MT Extra Condensed" size="38.0" />
+                           </font>
+                        </Button>
+                        <Button fx:id="btnRefuser" layoutX="774.0" layoutY="490.0" mnemonicParsing="false" prefHeight="80.0" prefWidth="149.0" style="-fx-background-color: #5d0d18; -fx-background-radius: 15;" text="Refuser" textFill="#fff9eb">
+                           <font>
+                              <Font name="Gloucester MT Extra Condensed" size="38.0" />
+                           </font>
+                        </Button>
+                        <Button fx:id="btnVoirAgent" layoutX="767.0" layoutY="148.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="160.0" style="-fx-background-color: #fff9eb; -fx-background-radius: 15;" text="Voir l'agent" textFill="#513a38">
+                           <font>
+                              <Font name="Gloucester MT Extra Condensed" size="26.0" />
+                           </font>
+                        </Button>
+                        <Button fx:id="btnVoirVehicule" layoutX="767.0" layoutY="213.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="160.0" style="-fx-background-color: #fff9eb; -fx-background-radius: 15;" text="Voir le véhicule" textFill="#513a38">
+                           <font>
+                              <Font name="Gloucester MT Extra Condensed" size="26.0" />
+                           </font>
+                        </Button>
+                        <TextField layoutX="15.0" layoutY="85.0" prefHeight="25.0" prefWidth="167.0" promptText="Chercher véhicule..." />
+                        <Button fx:id="btnGoVehicules1" layoutX="182.0" layoutY="85.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="38.0" text="Go" />
+                     </children>
+                  </Pane>
+               </children>
+            </Pane>
+            <Pane fx:id="paneAffectationAgent" layoutY="88.0" prefHeight="628.0" prefWidth="978.0" style="-fx-background-color: #fff9eb;">
+               <children>
+                  <Pane layoutX="21.0" layoutY="20.0" prefHeight="588.0" prefWidth="937.0" style="-fx-background-color: #9fb2ac; -fx-background-radius: 25;">
+                     <children>
+                        <TableView layoutX="29.0" layoutY="205.0" prefHeight="309.0" prefWidth="356.0">
+                          <columns>
+                            <TableColumn fx:id="colANomAgent" prefWidth="88.0" text="Nom" />
+                            <TableColumn fx:id="colAPrenomAgent" prefWidth="81.0" text="Prénom" />
+                              <TableColumn fx:id="colAMatAgent" prefWidth="95.0" text="Matricule" />
+                              <TableColumn fx:id="colAServiceAgent" prefWidth="91.0" text="Service" />
+                          </columns>
+                        </TableView>
+                        <TextField fx:id="tfRechercherAgent" layoutX="115.0" layoutY="172.0" promptText="Rechercher.." />
+                        <Button fx:id="btnGoAgents" layoutX="264.0" layoutY="172.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="38.0" text="Go" />
+                        <TableView layoutX="554.0" layoutY="208.0" prefHeight="309.0" prefWidth="356.0">
+                           <columns>
+                              <TableColumn fx:id="colAMarque" prefWidth="88.0" text="Marque" />
+                              <TableColumn fx:id="colAModele" prefWidth="81.0" text="Modèle" />
+                              <TableColumn fx:id="colAImmat" prefWidth="95.0" text="Immatriculation" />
+                              <TableColumn fx:id="colAStatus" prefWidth="91.0" text="Status" />
+                           </columns>
+                        </TableView>
+                        <TextField fx:id="tfRechercherVehicule" layoutX="633.0" layoutY="175.0" promptText="Rechercher.." />
+                        <Button fx:id="btnGoVehicules" layoutX="782.0" layoutY="175.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="38.0" text="Go" />
+                        <Label layoutX="115.0" layoutY="97.0" prefHeight="60.0" prefWidth="184.0" text="Liste des agents" textAlignment="CENTER" textFill="#fff9eb">
+                           <font>
+                              <Font name="Gloucester MT Extra Condensed" size="41.0" />
+                           </font>
+                        </Label>
+                        <Label layoutX="624.0" layoutY="97.0" prefHeight="60.0" prefWidth="217.0" text="Liste des véhicules" textAlignment="CENTER" textFill="#fff9eb">
+                           <font>
+                              <Font name="Gloucester MT Extra Condensed" size="41.0" />
+                           </font>
+                        </Label>
+                        <Label layoutX="318.0" layoutY="14.0" prefHeight="60.0" prefWidth="301.0" text="Affectation des agents" textAlignment="CENTER" textFill="#fff9eb">
+                           <font>
+                              <Font name="Gloucester MT Extra Condensed" size="48.0" />
+                           </font>
+                        </Label>
+                        <Button fx:id="btnAffecter" layoutX="406.0" layoutY="264.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="126.0" style="-fx-background-color: #fff9eb; -fx-background-radius: 15;" text="Affecter" textFill="#513a38">
+                           <font>
+                              <Font name="Gloucester MT Extra Condensed" size="26.0" />
+                           </font>
+                        </Button>
+                        <Button fx:id="btnRetirer" layoutX="406.0" layoutY="402.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="126.0" style="-fx-background-color: #5d0d18; -fx-background-radius: 15;" text="Retirer" textFill="#fff9eb">
+                           <font>
+                              <Font name="Gloucester MT Extra Condensed" size="26.0" />
+                           </font>
+                        </Button>
+                     </children>
+                  </Pane>
+               </children>
+            </Pane>
          </children>
       </Pane>
    </children>
