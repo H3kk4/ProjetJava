@@ -15,7 +15,7 @@
 <?import javafx.scene.shape.SVGPath?>
 <?import javafx.scene.text.Font?>
 
-<Pane id="main-page" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="716.0" prefWidth="978.0" style="-fx-background-color: #9fb2ac;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+<Pane id="main-page" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="716.0" prefWidth="978.0" style="-fx-background-color: #9fb2ac;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.floteo.ui.InterfaceApp">
    <children>
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#513a38" height="89.0" stroke="BLACK" strokeType="INSIDE" width="978.0" />
       <Button id="btn-home" fx:id="btnHome" layoutX="14.0" layoutY="22.0" mnemonicParsing="false" opacity="0.0" prefHeight="43.0" prefWidth="43.0" textFill="TRANSPARENT" />
