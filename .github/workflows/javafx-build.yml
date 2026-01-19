@@ -13,11 +13,11 @@ jobs:
       - name: Checkout du code
         uses: actions/checkout@v4
 
-      - name: Installer Java
+      - name: Installer Java 25  # 🔹 Changement ici
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
 
       - name: Cache Maven
         uses: actions/cache@v4
@@ -27,6 +27,7 @@ jobs:
 
       - name: Build JavaFX
         run: mvn clean package
+
       - name: Publier le JAR
         uses: actions/upload-artifact@v4
         with:
