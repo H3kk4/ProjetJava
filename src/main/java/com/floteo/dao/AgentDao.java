@@ -135,4 +135,47 @@ public final class AgentDao {
                 rs.getLong("service_id")
         );
     }
+
+    public boolean update(long id, String matricule, String firstName, String lastName, long serviceId) throws SQLException {
+        String sql = """
+        UPDATE agent
+        SET matricule = ?, first_name = ?, last_name = ?, service_id = ?
+        WHERE id = ?
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, matricule);
+            ps.setString(2, firstName);
+            ps.setString(3, lastName);
+            ps.setLong(4, serviceId);
+            ps.setLong(5, id);
+            return ps.executeUpdate() == 1;
+        }
+    }
+
+    public List<Agent> findByText(String q) throws SQLException {
+        String sql = """
+        SELECT id, matricule, first_name, last_name, service_id
+        FROM agent
+        WHERE (? = '' OR LOWER(matricule) LIKE LOWER(?) OR LOWER(first_name) LIKE LOWER(?) OR LOWER(last_name) LIKE LOWER(?))
+        ORDER BY last_name, first_name
+        """;
+
+        String text = (q == null) ? "" : q.trim();
+        String like = "%" + text + "%";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, text);
+            ps.setString(2, like);
+            ps.setString(3, like);
+            ps.setString(4, like);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                List<Agent> out = new ArrayList<>();
+                while (rs.next()) out.add(map(rs));
+                return out;
+            }
+        }
+    }
+
+
 }

@@ -134,4 +134,106 @@ public final class AssignmentDao {
                 end
         );
     }
+
+    public List<com.floteo.ui.InterfaceController.AssignmentRow> findRowsForUi(String plateOrText) throws SQLException {
+        String sql = """
+        SELECT
+          a.id                  AS assignment_id,
+          a.agent_id            AS agent_id,
+          a.vehicle_id          AS vehicle_id,
+          a.start_date          AS start_date,
+          a.end_date            AS end_date,
+          a.status              AS a_status,
+          ag.first_name         AS first_name,
+          ag.last_name          AS last_name,
+          v.brand               AS brand,
+          v.model               AS model,
+          v.plate               AS plate,
+          v.status              AS v_status
+        FROM assignment a
+        JOIN agent ag   ON ag.id = a.agent_id
+        JOIN vehicle v  ON v.id  = a.vehicle_id
+        WHERE (? = '' OR LOWER(v.plate) LIKE LOWER(?) OR LOWER(v.brand) LIKE LOWER(?) OR LOWER(v.model) LIKE LOWER(?))
+        ORDER BY a.start_date DESC, a.id DESC
+        """;
+
+        String q = plateOrText == null ? "" : plateOrText.trim();
+        String like = "%" + q + "%";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, q);
+            ps.setString(2, like);
+            ps.setString(3, like);
+            ps.setString(4, like);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                List<com.floteo.ui.InterfaceController.AssignmentRow> out = new ArrayList<>();
+                while (rs.next()) {
+                    LocalDate start = rs.getDate("start_date").toLocalDate();
+                    Date endSql = rs.getDate("end_date");
+                    LocalDate end = (endSql == null) ? null : endSql.toLocalDate();
+
+                    String agent = rs.getString("last_name") + " " + rs.getString("first_name");
+                    String vehicule = rs.getString("brand") + " " + rs.getString("model");
+                    String plate = rs.getString("plate");
+                    String status = rs.getString("a_status");
+
+                    out.add(new com.floteo.ui.InterfaceController.AssignmentRow(
+                            rs.getLong("assignment_id"),
+                            rs.getLong("agent_id"),
+                            rs.getLong("vehicle_id"),
+                            start,               // dateDemande = start (faute de mieux)
+                            agent,
+                            vehicule,
+                            plate,
+                            start,
+                            end,
+                            status
+                    ));
+                }
+                return out;
+            }
+        }
+    }
+
+    public Optional<Assignment> findActiveByAgent(long agentId) throws SQLException {
+        String sql = """
+        SELECT id, vehicle_id, agent_id, start_date, end_date
+        FROM assignment
+        WHERE agent_id = ? AND end_date IS NULL
+        ORDER BY start_date DESC
+        LIMIT 1
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, agentId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return Optional.empty();
+                return Optional.of(map(rs));
+            }
+        }
+    }
+
+    public boolean accept(long assignmentId) throws SQLException {
+        String sql = """
+      UPDATE assignment
+      SET status = 'EN_COURS'
+      WHERE id = ? AND status = 'DEMANDEE'
+    """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, assignmentId);
+            return ps.executeUpdate() == 1;
+        }
+    }
+
+    public boolean refuse(long assignmentId) throws SQLException {
+        String sql = """
+      UPDATE assignment
+      SET status = 'REFUSEE'
+      WHERE id = ? AND status = 'DEMANDEE'
+    """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, assignmentId);
+            return ps.executeUpdate() == 1;
+        }
+    }
 }

@@ -156,4 +156,31 @@ public final class VehicleDao {
                 VehicleStatus.valueOf(rs.getString("status"))
         );
     }
+
+    public List<Vehicle> findAvailableByText(String q) throws SQLException {
+        String sql = """
+        SELECT id, plate, type, brand, model, mileage, acquisition_date, status
+        FROM vehicle
+        WHERE status = 'DISPONIBLE'
+          AND (? = '' OR LOWER(plate) LIKE LOWER(?) OR LOWER(brand) LIKE LOWER(?) OR LOWER(model) LIKE LOWER(?))
+        ORDER BY plate
+        """;
+
+        String text = (q == null) ? "" : q.trim();
+        String like = "%" + text + "%";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, text);
+            ps.setString(2, like);
+            ps.setString(3, like);
+            ps.setString(4, like);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                List<Vehicle> out = new ArrayList<>();
+                while (rs.next()) out.add(map(rs));
+                return out;
+            }
+        }
+    }
+
 }
