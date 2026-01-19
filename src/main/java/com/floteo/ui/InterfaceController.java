@@ -237,7 +237,7 @@ public class InterfaceController {
 
             lblDisponibles.setText(String.valueOf(counts.getOrDefault(VehicleStatus.DISPONIBLE, 0)));
             lblIndisponibles.setText(String.valueOf(counts.getOrDefault(VehicleStatus.ENTRETIEN, 0)));
-            // "Réservés" = AFFECTE chez toi
+            // "Réservés" = AFFECTE
             lblReserves.setText(String.valueOf(counts.getOrDefault(VehicleStatus.AFFECTE, 0)));
 
         } catch (Exception e) {
@@ -397,7 +397,7 @@ public class InterfaceController {
                     Agent a = tabAgents.getSelectionModel().getSelectedItem();
                     if (a == null) throw new IllegalArgumentException("Sélectionne un agent.");
 
-                    // on retire sa dernière affectation active (si tu veux ce comportement)
+                    // on retire sa dernière affectation active
                     var active = assignmentDao.findActiveByAgent(a.id());
                     if (active.isEmpty()) { showError("Aucune affectation active pour cet agent."); return; }
 
@@ -683,12 +683,12 @@ public class InterfaceController {
                         cell.getValue().brand() + " " + cell.getValue().model()
                 )
         );
-        colImmat.setCellValueFactory(new PropertyValueFactory<>("plate"));
-        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+        colImmat.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().plate()));
+        colStatus.setCellValueFactory(cell -> new javafx.beans.property.SimpleObjectProperty<>(cell.getValue().status()));
 
         // combos
         comboStatus.setItems(FXCollections.observableArrayList(VehicleStatus.values()));
-        // Tu peux mettre des types fixes, ou les charger depuis DB si tu veux
+
         comboType.setItems(FXCollections.observableArrayList("VL", "UTILITAIRE", "CAMION", "MOTO"));
 
         // table data
@@ -722,6 +722,7 @@ public class InterfaceController {
     private void reloadVehicles() {
         try {
             vehicles.setAll(vehicleDao.findAll());
+            System.out.println(vehicles);
         } catch (Exception e) {
             showError("Impossible de charger les véhicules: " + e.getMessage());
         }
