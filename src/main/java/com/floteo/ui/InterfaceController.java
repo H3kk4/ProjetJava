@@ -1,12 +1,18 @@
 package com.floteo.ui;
 
+import com.calendarfx.model.Calendar;
+import com.calendarfx.model.CalendarSource;
+import com.calendarfx.model.Entry;
+import com.calendarfx.view.CalendarView;
 import com.floteo.dao.*;
+import com.floteo.model.*;
 import com.floteo.service.AssignmentService;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
-import com.floteo.model.Vehicle;
-import com.floteo.model.VehicleStatus;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -15,12 +21,17 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+
+import java.io.Console;
+import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
-import com.floteo.model.Agent;
-import com.floteo.model.Service;
+
 import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.layout.StackPane;
 
 
 import java.time.LocalDate;
@@ -146,7 +157,9 @@ public class InterfaceController {
     @FXML private Button btnGoVehicules;
 
     // --- CALENDRIER ---
+    @FXML private StackPane calendarContainer;
     @FXML private Button btnCalendrier;
+    private Parent calendarRoot;
 
     private final ObservableList<AssignmentRow> affectations = FXCollections.observableArrayList();
     private final DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -188,9 +201,9 @@ public class InterfaceController {
         if (btnVehicules != null) {
             btnVehicules.setOnAction(e -> navigateTo(this::showListeVehicules));
         }
-        if (btnCalendrier != null) {
-            btnCalendrier.setOnAction(e -> showError("Calendrier non implémenté (à faire)."));
-        }
+//        if (btnCalendrier != null) {
+//            btnCalendrier.setOnAction(e -> showError("Calendrier non implémenté (à faire)."));
+//        }
     }
 
     // --- NAVIGATION ---
@@ -984,5 +997,90 @@ public class InterfaceController {
         if (!ok) { showError("Affectation déjà traitée (ou pas en attente)."); return; }
 
         reloadAffectations();
+    }
+
+    // --- CALENDAR ---
+    @FXML
+    private void ouvrirCalendrier() {
+
+        if (calendarRoot == null) {
+            calendarRoot = creerCalendarView();
+            calendarContainer.getChildren().add(calendarRoot);
+        }
+
+        paneDashboardVehicules.setVisible(false);
+        calendarContainer.setVisible(true);
+    }
+
+    private Parent creerCalendarView() {
+
+        Calendar calendar = new Calendar("Réservations");
+        calendar.setStyle(Calendar.Style.STYLE1);
+        chargerReservations(calendar);
+
+        CalendarSource source = new CalendarSource("BDD");
+        source.getCalendars().add(calendar);
+
+        CalendarView calendarView = new CalendarView();
+        calendarView.getCalendarSources().add(source);
+
+        calendarView.setShowAddCalendarButton(false);
+        calendarView.setShowPrintButton(false);
+
+        Button btnRetour = new Button("Retour");
+        btnRetour.setOnAction(e -> {
+            calendarContainer.setVisible(false);
+            paneDashboardVehicules.setVisible(true);
+        });
+
+        BorderPane root = new BorderPane();
+        root.setTop(btnRetour);
+        root.setCenter(calendarView);
+
+        return root;
+    }
+
+    private void chargerReservations(Calendar calendar) {
+
+            Task<List<Assignment>> task = new Task<>() {
+                @Override
+                protected List<Assignment> call() {
+                    try {
+                        return new AssignmentDao(conn).findAll();
+                    }catch(SQLException ex){
+                        System.out.println(ex.getMessage());
+                        List<Assignment> lst = new ArrayList<>();
+                        return lst;
+                    }
+                }
+            };
+
+            task.setOnSucceeded(e -> {
+                for (Assignment a : task.getValue()) {
+                    Entry<?> entry = convertirEnEntry(a);
+                    calendar.addEntry(entry);
+                }
+            });
+
+            task.setOnFailed(e -> task.getException().printStackTrace());
+
+            new Thread(task).start();
+    }
+
+    private Entry<?> convertirEnEntry(Assignment a) {
+
+        Entry<?> entry = new Entry<>("Réservation #" + a.vehicleId());
+
+        entry.setInterval(
+                a.startDate(),
+                a.endDate()
+        );
+
+//        switch (a.getStatut()) {
+//            case "RESERVE" -> entry.setStyle("entry-reserve");
+//            case "INDISPONIBLE" -> entry.setStyle("entry-indispo");
+//        }
+
+        return entry;
     }
 }
