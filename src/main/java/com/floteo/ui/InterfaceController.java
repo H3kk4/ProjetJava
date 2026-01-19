@@ -822,7 +822,7 @@ public class InterfaceController {
                     brand,
                     model,
                     mileage,
-                    LocalDate.now(),  // pas dans l'UI pour l'instant
+                    LocalDate.now(),
                     status
             );
             reloadVehicles();
@@ -836,16 +836,32 @@ public class InterfaceController {
             Vehicle selected = tabVehicules.getSelectionModel().getSelectedItem();
             if (selected == null) throw new IllegalStateException("Aucun véhicule sélectionné.");
 
-            // Version simple : on modifie juste le status (tu peux faire un update complet après)
-            vehicleDao.updateStatus(selected.id(), status);
+            boolean ok = vehicleDao.update(
+                    selected.id(),
+                    plate,
+                    type,
+                    brand,
+                    model,
+                    mileage,
+                    status
+            );
+
+            if (!ok) throw new IllegalStateException("Mise à jour échouée.");
 
             reloadVehicles();
+
+            for (Vehicle v : vehicles) {
+                if (v.id() == selected.id()) {
+                    tabVehicules.getSelectionModel().select(v);
+                    tabVehicules.scrollTo(v);
+                    break;
+                }
+            }
+
             editMode = false;
             setVehicleFormEditable(false);
             return;
         }
-
-        showError("Clique sur Ajouter ou Modifier avant de sauvegarder.");
     }
 
     private void onDeleteVehicle() throws Exception {

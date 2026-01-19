@@ -200,5 +200,33 @@ public final class VehicleDao {
             }
         }
     }
+    public boolean update(
+            long id,
+            String plate,
+            String type,
+            String brand,
+            String model,
+            int mileage,
+            VehicleStatus status
+    ) throws SQLException {
+
+        String sql = """
+        UPDATE vehicle
+        SET plate = ?, type = ?, brand = ?, model = ?, mileage = ?, status = ?
+        WHERE id = ?
+        """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, plate);
+            ps.setString(2, type);
+            ps.setString(3, brand);
+            ps.setString(4, model);
+            ps.setInt(5, mileage);
+            ps.setString(6, status.name());
+            ps.setLong(7, id);
+            return ps.executeUpdate() == 1;
+        }
+    }
+
 
 }

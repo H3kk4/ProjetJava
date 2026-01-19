@@ -41,16 +41,11 @@ public class InterfaceApp extends Application {
         controller.init(conn);
 
         // 4) Lancer la fenêtre
-        Scene scene = new Scene(root, 978, 716);  // taille de ton FXML
+        Scene scene = new Scene(root, 978, 716);
         stage.setScene(scene);
         stage.setTitle("Floteo");
-
-        // empêche que l'utilisateur réduise trop (sinon tout se chevauche avec Pane)
-                stage.setMinWidth(978);
-                stage.setMinHeight(716);
-
-        // optionnel : si tu veux être tranquille tant que le layout n'est pas responsive
-        // stage.setResizable(false);
+        stage.setMinWidth(978);
+        stage.setMinHeight(716);
 
         stage.show();
     }
