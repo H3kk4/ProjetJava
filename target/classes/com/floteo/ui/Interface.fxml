@@ -15,6 +15,7 @@
 <?import javafx.scene.shape.SVGPath?>
 <?import javafx.scene.text.Font?>
 
+<?import javafx.scene.layout.StackPane?>
 <Pane id="main-page" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="716.0" prefWidth="978.0" style="-fx-background-color: #9fb2ac;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.floteo.ui.InterfaceController">
    <children>
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#513a38" height="89.0" stroke="BLACK" strokeType="INSIDE" width="978.0" />
@@ -108,7 +109,7 @@
                               <Font name="Gloucester MT Extra Condensed" size="42.0" />
                            </font>
                         </Label>
-                        <Button id="btn-calendrier" fx:id="btnCalendrier" alignment="CENTER" contentDisplay="CENTER" layoutX="20.0" layoutY="488.0" mnemonicParsing="false" prefHeight="81.0" prefWidth="346.0" style="-fx-background-color: #fff9eb; -fx-background-radius: 25; -fx-border-radius: 25; -fx-border-color: #513a38; -fx-border-width: 3;" text="Voir le calendrier" textAlignment="CENTER" textFill="#513a38">
+                        <Button id="btn-calendrier" fx:id="btnCalendrier" onAction="#ouvrirCalendrier" alignment="CENTER" contentDisplay="CENTER" layoutX="20.0" layoutY="488.0" mnemonicParsing="false" prefHeight="81.0" prefWidth="346.0" style="-fx-background-color: #fff9eb; -fx-background-radius: 25; -fx-border-radius: 25; -fx-border-color: #513a38; -fx-border-width: 3;" text="Voir le calendrier" textAlignment="CENTER" textFill="#513a38">
                            <font>
                               <Font name="Gloucester MT Extra Condensed" size="40.0" />
                            </font>
@@ -124,6 +125,9 @@
                   </Pane>
                </children>
             </Pane>
+
+            <StackPane fx:id="calendarContainer" layoutX="0" layoutY="0" prefWidth="978.0" prefHeight="628.0" visible="false"/>
+
             <Pane fx:id="paneListeVehicules" layoutY="88.0" prefHeight="628.0" prefWidth="978.0" style="-fx-background-color: #fff9eb;" visible="false">
                <children>
                   <Pane id="gestion-vehicules-dashboard" layoutX="21.0" layoutY="17.0" prefHeight="594.0" prefWidth="937.0" style="-fx-background-color: #9fb2ac; -fx-background-radius: 25; -fx-border-radius: 25;">
