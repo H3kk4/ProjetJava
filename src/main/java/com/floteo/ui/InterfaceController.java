@@ -41,6 +41,9 @@ import java.sql.Connection;
 
 public class InterfaceController {
 
+    @FXML private javafx.scene.shape.SVGPath svgBack;
+    @FXML private javafx.scene.shape.SVGPath svgHome;
+
     // --- PANES ---
     @FXML private Pane paneAccueil;
     @FXML private Pane paneGestionVehicules;
@@ -145,7 +148,7 @@ public class InterfaceController {
     @FXML private TableColumn<AssignmentRow, String> colLAStatus;
 
     @FXML private Button btnAccepter;
-    @FXML private Button btnRefuser;
+    @FXML private Button btnCloturer;
     @FXML private Button btnVoirAgent;
     @FXML private Button btnVoirVehicule;
 
@@ -218,6 +221,8 @@ public class InterfaceController {
         paneListeAgents.setVisible(false);
         paneListeAffectations.setVisible(false);
         paneAffectationAgent.setVisible(false);
+        svgBack.setVisible(true);
+        svgHome.setVisible(true);
     }
 
     private void showAccueil() {
@@ -225,6 +230,8 @@ public class InterfaceController {
         paneAccueil.setVisible(true);
         btnBack.setVisible(false);
         btnHome.setVisible(false);
+        svgBack.setVisible(true);
+        svgHome.setVisible(true);
     }
 
     private void showGestionVehiculesDashboard() {
@@ -406,20 +413,11 @@ public class InterfaceController {
 
         if (btnRetirerAffectation != null) {
             btnRetirerAffectation.setOnAction(e -> {
-                try {
-                    Agent a = tabAgents.getSelectionModel().getSelectedItem();
-                    if (a == null) throw new IllegalArgumentException("Sélectionne un agent.");
-
-                    // on retire sa dernière affectation active
-                    var active = assignmentDao.findActiveByAgent(a.id());
-                    if (active.isEmpty()) { showError("Aucune affectation active pour cet agent."); return; }
-
-                    assignmentService.endActiveAssignmentForVehicle(active.get().vehicleId(), LocalDate.now());
-                    reloadAffectations();
-                    reloadVehicles();
-                } catch (Exception ex) {
-                    showError(ex.getMessage());
-                }
+                Agent a = tabAgents.getSelectionModel().getSelectedItem();
+                if (a == null) { showError("Sélectionne un agent."); return; }
+                showListeAffectations();
+                reloadAffectations();
+                selectAgentInAffectationById(a.id());
             });
         }
 
@@ -588,7 +586,7 @@ public class InterfaceController {
             catch (Exception ex) { showError(ex.getMessage()); }
         });
 
-        btnRetirer.setOnAction(e -> {
+        btnCloturer.setOnAction(e -> {
             try { onRetirerAffectationVehicule(); }
             catch (Exception ex) { showError(ex.getMessage()); }
         });
@@ -701,8 +699,7 @@ public class InterfaceController {
 
         // combos
         comboStatus.setItems(FXCollections.observableArrayList(VehicleStatus.values()));
-
-        comboType.setItems(FXCollections.observableArrayList("VL", "UTILITAIRE", "CAMION", "MOTO"));
+        reloadVehicleTypes();
 
         // table data
         tabVehicules.setItems(vehicles);
@@ -732,10 +729,19 @@ public class InterfaceController {
         reloadVehicles();
     }
 
+    private void reloadVehicleTypes() {
+        try {
+            comboType.setItems(FXCollections.observableArrayList(vehicleDao.findAllTypeLabels()));
+        } catch (Exception e) {
+            showError("Impossible de charger les types: " + e.getMessage());
+            comboType.setItems(FXCollections.observableArrayList()); // fallback vide
+        }
+    }
+
+
     private void reloadVehicles() {
         try {
             vehicles.setAll(vehicleDao.findAll());
-            System.out.println(vehicles);
         } catch (Exception e) {
             showError("Impossible de charger les véhicules: " + e.getMessage());
         }
@@ -904,12 +910,14 @@ public class InterfaceController {
         tabListeAffectations.setItems(affectations);
 
         tabListeAffectations.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> {
-            boolean pending = n != null && "DEMANDEE".equalsIgnoreCase(n.status());
-            btnAccepter.setDisable(!pending);
-            btnRefuser.setDisable(!pending);
+            boolean isDemande = n != null && "DEMANDEE".equalsIgnoreCase(n.status());
+            boolean isEnCours = n != null && "EN_COURS".equalsIgnoreCase(n.status());
+
+            btnAccepter.setDisable(!isDemande);
+            btnCloturer.setDisable(!(isDemande || isEnCours));
         });
         btnAccepter.setDisable(true);
-        btnRefuser.setDisable(true);
+        btnCloturer.setDisable(true);
 
 
         // boutons
@@ -939,7 +947,7 @@ public class InterfaceController {
             catch (Exception ex) { showError(ex.getMessage()); }
         });
 
-        btnRefuser.setOnAction(e -> {
+        btnCloturer.setOnAction(e -> {
             try { onRefuserAffectation(); }
             catch (Exception ex) { showError(ex.getMessage()); }
         });
@@ -991,13 +999,48 @@ public class InterfaceController {
 
     private void onRefuserAffectation() throws Exception {
         AssignmentRow row = tabListeAffectations.getSelectionModel().getSelectedItem();
-        if (row == null) { showError("Sélectionne une affectation."); return; }
+        LocalDate end = LocalDate.now();
 
-        boolean ok = assignmentDao.refuse(row.assignmentId());
-        if (!ok) { showError("Affectation déjà traitée (ou pas en attente)."); return; }
+        if (row == null) {
+            showError("Sélectionne une affectation.");
+            return;
+        }
+
+        String status = row.status();
+
+        if ("DEMANDEE".equalsIgnoreCase(status)) {
+
+            // Cas normal : on refuse une demande
+            boolean ok = assignmentDao.refuseDemande(row.assignmentId(), end);
+            if (!ok) {
+                showError("Affectation déjà traitée.");
+                return;
+            }
+
+            assignmentDao.endAssignment(row.assignmentId(), end);
+            vehicleDao.updateStatus(row.vehicleId(), VehicleStatus.DISPONIBLE);
+
+        } else if ("EN_COURS".equalsIgnoreCase(status)) {
+
+            // Cas spécial : on clôture une affectation en cours
+            boolean ok = assignmentDao.cloturerEnCours(row.assignmentId(), end);
+            if (!ok) {
+                showError("Affectation déjà traitée.");
+                return;
+            }
+            assignmentDao.endAssignment(row.assignmentId(), end);
+            vehicleDao.updateStatus(row.vehicleId(), VehicleStatus.DISPONIBLE);
+
+        } else {
+            showError("Cette affectation ne peut plus être traitée.");
+            return;
+        }
 
         reloadAffectations();
+        reloadVehicles();
     }
+
+
 
     // --- CALENDAR ---
     @FXML
@@ -1010,6 +1053,11 @@ public class InterfaceController {
 
         paneDashboardVehicules.setVisible(false);
         calendarContainer.setVisible(true);
+
+        btnBack.setVisible(false);
+        btnHome.setVisible(false);
+        svgBack.setVisible(false);
+        svgHome.setVisible(false);
     }
 
     private Parent creerCalendarView() {
@@ -1031,6 +1079,10 @@ public class InterfaceController {
         btnRetour.setOnAction(e -> {
             calendarContainer.setVisible(false);
             paneDashboardVehicules.setVisible(true);
+            btnBack.setVisible(true);
+            btnHome.setVisible(true);
+            svgBack.setVisible(true);
+            svgHome.setVisible(true);
         });
 
         BorderPane root = new BorderPane();

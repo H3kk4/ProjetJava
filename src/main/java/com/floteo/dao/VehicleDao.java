@@ -104,6 +104,24 @@ public final class VehicleDao {
         }
     }
 
+    public List<String> findAllTypeLabels() throws SQLException {
+        String sql = """
+        SELECT label
+        FROM vehicle_type
+        ORDER BY label
+        """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            List<String> out = new ArrayList<>();
+            while (rs.next()) out.add(rs.getString("label"));
+            return out;
+        }
+    }
+
+
+
     public List<Vehicle> findByStatus(VehicleStatus status) throws SQLException {
         String sql = """
             SELECT id, plate, type, brand, model, mileage, acquisition_date, status

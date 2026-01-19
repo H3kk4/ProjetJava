@@ -225,15 +225,30 @@ public final class AssignmentDao {
         }
     }
 
-    public boolean refuse(long assignmentId) throws SQLException {
+    public boolean refuseDemande(long assignmentId, LocalDate end) throws SQLException {
         String sql = """
-      UPDATE assignment
-      SET status = 'REFUSEE'
-      WHERE id = ? AND status = 'DEMANDEE'
+        UPDATE assignment
+        SET status = 'REFUSEE', end_date = ?
+        WHERE id = ? AND status = 'DEMANDEE'
     """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, assignmentId);
+            ps.setDate(1, java.sql.Date.valueOf(end));
+            ps.setLong(2, assignmentId);
             return ps.executeUpdate() == 1;
         }
     }
+
+    public boolean cloturerEnCours(long assignmentId, LocalDate end) throws SQLException {
+        String sql = """
+        UPDATE assignment
+        SET status = 'CLOTUREE', end_date = ?
+        WHERE id = ? AND status = 'EN_COURS'
+    """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, java.sql.Date.valueOf(end));
+            ps.setLong(2, assignmentId);
+            return ps.executeUpdate() == 1;
+        }
+    }
+
 }
