@@ -5,6 +5,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.sql.Connection;
@@ -15,6 +16,21 @@ public class InterfaceApp extends Application {
     public void start(Stage stage) throws Exception {
         // 1) Connexion DB
         Connection conn = Db.connect();
+
+        // 1 bis chargement de la police d'écriture
+        Font.loadFont(
+                getClass().getResourceAsStream("/fonts/gloucester-mt-extra-condensed.ttf"),
+                12
+        );
+        Font.loadFont(
+                getClass().getResourceAsStream("/fonts/Britannic Bold Regular.ttf"),
+                12
+        );
+        Font.loadFont(
+                getClass().getResourceAsStream("/fonts/Gill Sans Ultra Bold Condensed Regular.ttf"),
+                12
+        );
+
 
         // 2) Charger le FXML controller
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/floteo/ui/Interface.fxml"));
