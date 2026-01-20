@@ -10,39 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout du code
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2️⃣ Installer Java 25
       - name: Setup Java 25
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 25
 
-      # 3️⃣ Cache Maven pour accélérer les builds
       - name: Cache Maven
         uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
 
-      # 4️⃣ Build Maven (compile et package)
       - name: Build Maven
         run: mvn clean package
 
-      # 5️⃣ Générer le fat-jar avec toutes les dépendances
       - name: Build Fat-JAR
         run: |
           mvn clean package shade:shade
           # Vérifier que le jar existe
           ls -l target/*.jar
 
-      # 6️⃣ Publier le jar et les fichiers nécessaires comme artefacts
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: floteo-javafx
           path: |
-            target/*-shaded.jar
+            target/*.jar
