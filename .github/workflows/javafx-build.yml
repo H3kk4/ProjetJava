@@ -31,12 +31,12 @@ jobs:
       - name: Générer l'exécutable Linux
         run: |
           mkdir -p dist
-          # chemin vers JavaFX modules (à adapter selon ton projet)
           export JAVAFX_LIB="/usr/share/openjfx/lib"
+          MAIN_JAR=$(ls target/*.jar | xargs -n 1 basename)
           jpackage \
             --input target \
             --name FloteoApp \
-            --main-jar target/*.jar \
+            --main-jar $MAIN_JAR \
             --main-class com.floteo.ui.InterfaceApp \
             --type app-image \
             --module-path $JAVAFX_LIB \
