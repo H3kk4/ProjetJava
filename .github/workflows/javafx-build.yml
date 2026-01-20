@@ -28,8 +28,25 @@ jobs:
       - name: Build JavaFX
         run: mvn clean package
 
-      - name: Publier le JAR
+      - name: Générer l'exécutable Linux
+        run: |
+          mkdir -p dist
+          # chemin vers JavaFX modules (à adapter selon ton projet)
+          export JAVAFX_LIB="/usr/share/openjfx/lib"
+          jpackage \
+            --input target \
+            --name FloteoApp \
+            --main-jar target/*.jar \
+            --main-class com.floteo.ui.InterfaceApp \
+            --type app-image \
+            --module-path $JAVAFX_LIB \
+            --add-modules javafx.controls,javafx.fxml \
+            --dest dist
+
+      - name: Publier les artefacts
         uses: actions/upload-artifact@v4
         with:
           name: javafx-app
-          path: target/*.jar
+          path: |
+            target/*.jar
+            dist/*
