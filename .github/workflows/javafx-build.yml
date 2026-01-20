@@ -1,4 +1,4 @@
-name: JavaFX Build
+name: JavaFX CI/CD
 
 on:
   push:
@@ -10,43 +10,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout du code
+      # 1️⃣ Checkout du code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Installer Java 25
+      # 2️⃣ Installer Java 25
+      - name: Setup Java 25
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '25'
+          distribution: temurin
+          java-version: 25
 
+      # 3️⃣ Cache Maven pour accélérer les builds
       - name: Cache Maven
         uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
 
-      - name: Build JavaFX
+      # 4️⃣ Build Maven (compile et package)
+      - name: Build Maven
         run: mvn clean package
 
-      - name: Générer l'exécutable Linux
+      # 5️⃣ Générer le fat-jar avec toutes les dépendances
+      - name: Build Fat-JAR
         run: |
-          mkdir -p dist
-          export JAVAFX_LIB="/usr/share/openjfx/lib"
-          MAIN_JAR=$(ls target/*.jar | xargs -n 1 basename)
-          jpackage \
-            --input target \
-            --name FloteoApp \
-            --main-jar $MAIN_JAR \
-            --main-class com.floteo.ui.InterfaceApp \
-            --type app-image \
-            --module-path $JAVAFX_LIB \
-            --add-modules javafx.controls,javafx.fxml \
-            --dest dist
+          mvn clean package shade:shade
+          # Vérifier que le jar existe
+          ls -l target/*-shaded.jar
 
-      - name: Publier les artefacts
+      # 6️⃣ Publier le jar et les fichiers nécessaires comme artefacts
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: javafx-app
+          name: floteo-javafx
           path: |
-            target/*.jar
-            dist/*
+            target/*-shaded.jar
