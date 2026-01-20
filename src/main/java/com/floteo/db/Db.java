@@ -5,13 +5,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-
-//Variable d'environnement :
-//$env:DB_HOST="ep-rough-paper-absi3kvo-pooler.eu-west-2.aws.neon.tech"
-//$env:DB_NAME="neondb"
-//$env:DB_USER="neondb_owner"
-//$env:DB_PASSWORD="npg_rfCc4atdgUJ0"
-
 public final class Db {
     private Db() {}
 

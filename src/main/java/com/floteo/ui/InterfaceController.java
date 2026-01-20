@@ -129,6 +129,7 @@ public class InterfaceController {
     @FXML private TableColumn<Vehicle, String> colAModele;
     @FXML private TableColumn<Vehicle, String> colAImmat;
     @FXML private TableColumn<Vehicle, String> colAStatus;
+    @FXML private TableColumn<Vehicle, String> colAEtat;
 
     @FXML private javafx.scene.control.Label lblDate;
     @FXML private javafx.scene.control.Label lblDisponibles;
@@ -204,9 +205,6 @@ public class InterfaceController {
         if (btnVehicules != null) {
             btnVehicules.setOnAction(e -> navigateTo(this::showListeVehicules));
         }
-//        if (btnCalendrier != null) {
-//            btnCalendrier.setOnAction(e -> showError("Calendrier non implémenté (à faire)."));
-//        }
     }
 
     // --- NAVIGATION ---
@@ -375,7 +373,7 @@ public class InterfaceController {
     private final ObservableList<Service> services = FXCollections.observableArrayList();
 
     private void initAgentsUi() {
-        // colonnes (adapte selon ton record Agent)
+        // colonnes
         colNomAgent.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().lastName()));
         colPrenomAgent.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().firstName()));
         colMatAgent.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().matricule()));
@@ -579,6 +577,7 @@ public class InterfaceController {
         colAModele.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().model()));
         colAImmat.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().plate()));
         colAStatus.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().status())));
+        colAEtat.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().etat())));
 
         tabAListeVehicules.setItems(vehiclesA);
 
@@ -603,45 +602,6 @@ public class InterfaceController {
         if (comboEtat != null) {
             comboEtat.setItems(FXCollections.observableArrayList("OK", "ABIME", "A CONTROLER"));
         }
-
-        // Actions rapides véhicule
-        if (btnRendreDisponible != null) {
-            btnRendreDisponible.setOnAction(e -> {
-                try {
-                    Vehicle v = tabVehicules.getSelectionModel().getSelectedItem();
-                    if (v == null) throw new IllegalArgumentException("Sélectionne un véhicule.");
-                    vehicleDao.updateStatus(v.id(), VehicleStatus.DISPONIBLE);
-                    reloadVehicles();
-                } catch (Exception ex) {
-                    showError(ex.getMessage());
-                }
-            });
-        }
-
-        if (btnRendreIndisponible != null) {
-            btnRendreIndisponible.setOnAction(e -> {
-                try {
-                    Vehicle v = tabVehicules.getSelectionModel().getSelectedItem();
-                    if (v == null) throw new IllegalArgumentException("Sélectionne un véhicule.");
-                    vehicleDao.updateStatus(v.id(), VehicleStatus.ENTRETIEN);
-                    reloadVehicles();
-                } catch (Exception ex) {
-                    showError(ex.getMessage());
-                }
-            });
-        }
-
-        if (btnAffecterAgent != null) {
-            btnAffecterAgent.setOnAction(e -> {
-                Vehicle v = tabVehicules.getSelectionModel().getSelectedItem();
-                if (v == null) { showError("Sélectionne un véhicule."); return; }
-                // on bascule sur l’écran d’affectation et on pré-sélectionne le véhicule
-                showAffectationAgents();
-                reloadAffectationAgentsData();
-                selectVehicleInAffectationById(v.id());
-            });
-        }
-
 
         reloadAffectationAgentsData();
     }
@@ -706,12 +666,24 @@ public class InterfaceController {
         // table data
         tabVehicules.setItems(vehicles);
 
-        // sélection -> remplir le panneau détail
+        // sélection - remplissage du panneau détail
         tabVehicules.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> {
-            if (newV != null) fillVehicleForm(newV);
-            setVehicleFormEditable(false);
-            editMode = false;
-            createMode = false;
+            if (newV != null) {
+                fillVehicleForm(newV);
+                if (newV.status() == VehicleStatus.ENTRETIEN) {
+                    btnAffecterAgent.setDisable(true);
+                    btnRendreDisponible.setDisable(false);
+                    btnRendreIndisponible.setDisable(true);
+                }
+                if (newV.status() == VehicleStatus.DISPONIBLE) {
+                    btnAffecterAgent.setDisable(false);
+                    btnRendreDisponible.setDisable(true);
+                    btnRendreIndisponible.setDisable(false);
+                }
+                setVehicleFormEditable(false);
+                editMode = false;
+                createMode = false;
+            }
         });
 
         // boutons
@@ -725,6 +697,52 @@ public class InterfaceController {
             try { onDeleteVehicle(); }
             catch (Exception ex) { showError(ex.getMessage()); }
         });
+
+        // Actions rapides véhicule
+        if (btnRendreDisponible != null) {
+            btnRendreDisponible.setOnAction(e -> {
+                try {
+                    System.out.println( "btnRendreDisponible clicked");
+                    Vehicle v = tabVehicules.getSelectionModel().getSelectedItem();
+                    if (v == null) throw new IllegalArgumentException("Sélectionne un véhicule.");
+                    vehicleDao.updateStatus(v.id(), VehicleStatus.DISPONIBLE);
+                    btnAffecterAgent.setDisable(false);
+                    btnRendreDisponible.setDisable(true);
+                    btnRendreIndisponible.setDisable(false);
+                    reloadVehicles();
+                } catch (Exception ex) {
+                    showError(ex.getMessage());
+                }
+            });
+        }
+
+        if (btnRendreIndisponible != null) {
+            btnRendreIndisponible.setOnAction(e -> {
+                try {
+                    Vehicle v = tabVehicules.getSelectionModel().getSelectedItem();
+                    if (v == null) throw new IllegalArgumentException("Sélectionne un véhicule.");
+                    vehicleDao.updateStatus(v.id(), VehicleStatus.ENTRETIEN);
+                    btnAffecterAgent.setDisable(true);
+                    btnRendreDisponible.setDisable(false);
+                    btnRendreIndisponible.setDisable(true);
+                    reloadVehicles();
+                } catch (Exception ex) {
+                    showError(ex.getMessage());
+                }
+            });
+        }
+
+        if (btnAffecterAgent != null) {
+            btnAffecterAgent.setOnAction(e -> {
+                Vehicle v = tabVehicules.getSelectionModel().getSelectedItem();
+                if (v == null) { showError("Sélectionne un véhicule."); return; }
+                // on bascule sur l’écran d’affectation et on pré-sélectionne le véhicule
+                showAffectationAgents();
+                reloadAffectationAgentsData();
+                selectVehicleInAffectationById(v.id());
+            });
+        }
+
 
         // état initial
         setVehicleFormEditable(false);
@@ -976,8 +994,8 @@ public class InterfaceController {
             AssignmentRow row = tabListeAffectations.getSelectionModel().getSelectedItem();
             if (row == null) { showError("Sélectionne une affectation."); return; }
 
-            showListeAgents();   // affiche l'écran
-            reloadAgents();      // garantit que la liste est remplie
+            showListeAgents();
+            reloadAgents();
             selectAgentById(row.agentId());
         });
 
@@ -986,7 +1004,7 @@ public class InterfaceController {
             if (row == null) { showError("Sélectionne une affectation."); return; }
 
             showListeVehicules();
-            reloadVehicles();    // garantit la liste
+            reloadVehicles();
             selectVehicleById(row.vehicleId());
         });
 
@@ -1175,12 +1193,6 @@ public class InterfaceController {
                 a.startDate(),
                 a.endDate()
         );
-
-//        switch (a.getStatut()) {
-//            case "RESERVE" -> entry.setStyle("entry-reserve");
-//            case "INDISPONIBLE" -> entry.setStyle("entry-indispo");
-//        }
-
         return entry;
     }
 

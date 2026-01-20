@@ -180,12 +180,12 @@ public final class VehicleDao {
 
     public List<Vehicle> findAvailableByText(String q) throws SQLException {
         String sql = """
-        SELECT id, plate, type, brand, model, mileage, acquisition_date, status
-        FROM vehicle
-        WHERE status = 'DISPONIBLE'
-          AND (? = '' OR LOWER(plate) LIKE LOWER(?) OR LOWER(brand) LIKE LOWER(?) OR LOWER(model) LIKE LOWER(?))
-        ORDER BY plate
-        """;
+    SELECT id, plate, type, brand, model, mileage, acquisition_date, status, etat
+    FROM vehicle
+    WHERE status = 'DISPONIBLE'
+      AND (? = '' OR LOWER(plate) LIKE LOWER(?) OR LOWER(brand) LIKE LOWER(?) OR LOWER(model) LIKE LOWER(?))
+    ORDER BY plate
+    """;
 
         String text = (q == null) ? "" : q.trim();
         String like = "%" + text + "%";
@@ -203,6 +203,7 @@ public final class VehicleDao {
             }
         }
     }
+
     public boolean update(
             long id,
             String plate,
