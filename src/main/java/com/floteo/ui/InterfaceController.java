@@ -129,6 +129,7 @@ public class InterfaceController {
     @FXML private TableColumn<Vehicle, String> colAModele;
     @FXML private TableColumn<Vehicle, String> colAImmat;
     @FXML private TableColumn<Vehicle, String> colAStatus;
+    @FXML private TableColumn<Vehicle, String> colAEtat;
 
     @FXML private javafx.scene.control.Label lblDate;
     @FXML private javafx.scene.control.Label lblDisponibles;
@@ -576,6 +577,7 @@ public class InterfaceController {
         colAModele.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().model()));
         colAImmat.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().plate()));
         colAStatus.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().status())));
+        colAEtat.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().etat())));
 
         tabAListeVehicules.setItems(vehiclesA);
 
