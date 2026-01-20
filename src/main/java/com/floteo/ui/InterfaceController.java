@@ -25,10 +25,7 @@ import javafx.scene.control.TextField;
 import java.io.Console;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.layout.StackPane;
@@ -66,6 +63,7 @@ public class InterfaceController {
     private Connection conn;
     private ServiceDao serviceDao;
     private AgentDao agentDao;
+    private EtatDao etatDao;
     private VehicleDao vehicleDao;
     private AssignmentDao assignmentDao;
     private AssignmentService assignmentService;
@@ -174,6 +172,7 @@ public class InterfaceController {
     private boolean agentEditMode = false;
     private boolean agentCreateMode = false;
 
+    private Map<Long, String> etatIdToName = new HashMap<>();
 
     /** appelée depuis InterfaceApp après le load() */
     public void init(Connection conn) {
@@ -181,6 +180,7 @@ public class InterfaceController {
 
         this.serviceDao = new ServiceDao(conn);
         this.agentDao = new AgentDao(conn);
+        this.etatDao = new EtatDao(conn);
         this.vehicleDao = new VehicleDao(conn);
         this.assignmentDao = new AssignmentDao(conn);
         this.assignmentService = new AssignmentService(conn, agentDao, vehicleDao, assignmentDao);
@@ -259,6 +259,8 @@ public class InterfaceController {
             lblIndisponibles.setText(String.valueOf(counts.getOrDefault(VehicleStatus.ENTRETIEN, 0)));
             // "Réservés" = AFFECTE
             lblReserves.setText(String.valueOf(counts.getOrDefault(VehicleStatus.AFFECTE, 0)));
+
+            initVehiculeEtat();
 
         } catch (Exception e) {
             showError("Impossible de charger le dashboard: " + e.getMessage());
@@ -597,7 +599,7 @@ public class InterfaceController {
         if (btnGoVehicules != null) btnGoVehicules.setOnAction(e -> reloadAffectationAgentsData());
         if (tfRechercherVehicule != null) tfRechercherVehicule.setOnAction(e -> reloadAffectationAgentsData());
 
-        // Combo état (simple - valeurs fixes)
+        // Combo état
         if (comboEtat != null) {
             comboEtat.setItems(FXCollections.observableArrayList("OK", "ABIME", "A CONTROLER"));
         }
@@ -754,6 +756,22 @@ public class InterfaceController {
         tfKilometrage.setText(String.valueOf(v.mileage()));
         comboType.setValue(v.type());
         comboStatus.setValue(v.status());
+
+        try {
+            if (v.etat() != 0 && comboEtat.getItems() != null) {
+                for (String etatName : comboEtat.getItems()) {
+                    // rechercher le nom correspondant à l'id du véhicule
+                    Optional<Etat> etat = etatDao.findByName(etatName);
+                    if (etat != null && etat.get().id() == v.etat()) {
+                        comboEtat.setValue(etatName);
+                        break;
+                    }
+                }
+            }
+        }
+        catch(SQLException ex){
+            throw new RuntimeException(ex);
+        }
     }
 
     private void clearVehicleForm() {
@@ -773,6 +791,7 @@ public class InterfaceController {
 
         comboType.setDisable(!editable);
         comboStatus.setDisable(!editable);
+        comboEtat.setDisable(!editable);
     }
 
     private void onAddVehicle() {
@@ -811,6 +830,17 @@ public class InterfaceController {
             throw new IllegalArgumentException("Kilométrage invalide.");
         }
 
+        String etatName = comboEtat.getValue();
+        if (etatName == null || etatName.isEmpty()) {
+            throw new IllegalArgumentException("L'état du véhicule doit être sélectionné.");
+        }
+
+        long etatId = etatIdToName.entrySet().stream()
+                .filter(entry -> entry.getValue().equals(etatName))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("État invalide sélectionné"));
+
         if (plate.isEmpty() || brand.isEmpty() || model.isEmpty() || type == null || status == null) {
             throw new IllegalArgumentException("Tous les champs véhicule sont obligatoires.");
         }
@@ -823,7 +853,8 @@ public class InterfaceController {
                     model,
                     mileage,
                     LocalDate.now(),
-                    status
+                    status,
+                    etatId
             );
             reloadVehicles();
             tabVehicules.getSelectionModel().select(created);
@@ -843,7 +874,8 @@ public class InterfaceController {
                     brand,
                     model,
                     mileage,
-                    status
+                    status,
+                    etatId
             );
 
             if (!ok) throw new IllegalStateException("Mise à jour échouée.");
@@ -1150,5 +1182,30 @@ public class InterfaceController {
 //        }
 
         return entry;
+    }
+
+    // --- ETAT VEHICULE ---
+    private void initVehiculeEtat() {
+        try {
+            List<Etat> etats = etatDao.findAll();
+            ObservableList<String> items = FXCollections.observableArrayList();
+            etatIdToName.clear();
+
+            for (Etat e : etats) {
+                items.add(e.name());
+                etatIdToName.put(e.id(), e.name());
+            }
+
+            comboEtat.setItems(items);
+
+            if (!items.isEmpty()) {
+                comboEtat.getSelectionModel().selectFirst();
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showError("Impossible de charger les états véhicule");
+            throw new RuntimeException(ex);
+        }
     }
 }

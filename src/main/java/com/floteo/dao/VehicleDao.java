@@ -28,14 +28,15 @@ public final class VehicleDao {
             String model,
             int mileage,
             LocalDate acquisitionDate,
-            VehicleStatus status
+            VehicleStatus status,
+            long etat
     ) throws SQLException {
 
         String sql = """
             INSERT INTO vehicle
-              (plate, type, brand, model, mileage, acquisition_date, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            RETURNING id, plate, type, brand, model, mileage, acquisition_date, status
+              (plate, type, brand, model, mileage, acquisition_date, status, etat)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            RETURNING id, plate, type, brand, model, mileage, acquisition_date, status, etat
             """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -46,6 +47,7 @@ public final class VehicleDao {
             ps.setInt(5, mileage);
             ps.setDate(6, Date.valueOf(acquisitionDate));
             ps.setString(7, status.name());
+            ps.setLong(8, etat);
 
             try (ResultSet rs = ps.executeQuery()) {
                 rs.next();
@@ -88,7 +90,7 @@ public final class VehicleDao {
 
     public List<Vehicle> findAll() throws SQLException {
         String sql = """
-            SELECT id, plate, type, brand, model, mileage, acquisition_date, status
+            SELECT id, plate, type, brand, model, mileage, acquisition_date, status, etat
             FROM vehicle
             ORDER BY plate
             """;
@@ -171,7 +173,8 @@ public final class VehicleDao {
                 rs.getString("model"),
                 rs.getInt("mileage"),
                 rs.getDate("acquisition_date").toLocalDate(),
-                VehicleStatus.valueOf(rs.getString("status"))
+                VehicleStatus.valueOf(rs.getString("status")),
+                rs.getLong("etat")
         );
     }
 
@@ -207,12 +210,13 @@ public final class VehicleDao {
             String brand,
             String model,
             int mileage,
-            VehicleStatus status
+            VehicleStatus status,
+            long etat
     ) throws SQLException {
 
         String sql = """
         UPDATE vehicle
-        SET plate = ?, type = ?, brand = ?, model = ?, mileage = ?, status = ?
+        SET plate = ?, type = ?, brand = ?, model = ?, mileage = ?, status = ?, etat = ?
         WHERE id = ?
         """;
 
@@ -223,7 +227,8 @@ public final class VehicleDao {
             ps.setString(4, model);
             ps.setInt(5, mileage);
             ps.setString(6, status.name());
-            ps.setLong(7, id);
+            ps.setLong(7, etat);
+            ps.setLong(8, id);
             return ps.executeUpdate() == 1;
         }
     }

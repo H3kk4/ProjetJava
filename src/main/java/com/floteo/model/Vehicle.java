@@ -10,5 +10,6 @@ public record Vehicle(
         String model,
         int mileage,
         LocalDate acquisitionDate,
-        VehicleStatus status
+        VehicleStatus status,
+        long etat
 ) {}

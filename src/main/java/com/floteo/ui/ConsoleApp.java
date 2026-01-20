@@ -1,14 +1,14 @@
 package com.floteo.ui;
 
-import com.floteo.dao.AgentDao;
-import com.floteo.dao.AssignmentDao;
-import com.floteo.dao.ServiceDao;
-import com.floteo.dao.VehicleDao;
+import com.floteo.dao.*;
+import com.floteo.model.Etat;
 import com.floteo.model.VehicleStatus;
 import com.floteo.service.AssignmentService;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -22,6 +22,7 @@ public final class ConsoleApp {
 
     private final ServiceDao serviceDao;
     private final AgentDao agentDao;
+    private final EtatDao etatDao;
     private final VehicleDao vehicleDao;
     private final AssignmentDao assignmentDao;
     private final AssignmentService assignmentService;
@@ -34,6 +35,7 @@ public final class ConsoleApp {
     public ConsoleApp(Connection conn) {
         this.serviceDao = new ServiceDao(conn);
         this.agentDao = new AgentDao(conn);
+        this.etatDao = new EtatDao(conn);
         this.vehicleDao = new VehicleDao(conn);
         this.assignmentDao = new AssignmentDao(conn);
         this.assignmentService = new AssignmentService(conn, agentDao, vehicleDao, assignmentDao);
@@ -66,6 +68,13 @@ public final class ConsoleApp {
                 System.out.println("ERREUR: " + e.getMessage());
             }
             System.out.println();
+            try{
+                List<Etat> etats = etatDao.findAll();
+                System.out.println("qfiupghqeigmbh");
+                System.out.println(etats.get(0) + " " +  etats.get(1) + " " + etats.get(2));
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -171,6 +180,7 @@ public final class ConsoleApp {
         String type = readNonEmpty("Type de véhicule (ex: Voiture, Camion, Moto): ");
         String brand = readNonEmpty("Marque: ");
         String model = readNonEmpty("Modèle: ");
+        long etat = Long.parseLong(readNonEmpty("Etat (1, 2, 3, 4) : "));
         int mileage = readInt("Kilométrage: ");
         LocalDate acquisitionDate =
                 readDateOrToday("Date d'acquisition (yyyy-MM-dd) [aujourd'hui]: ");
@@ -187,7 +197,8 @@ public final class ConsoleApp {
                 model,
                 mileage,
                 acquisitionDate,
-                status
+                status,
+                etat
         );
 
         System.out.printf(
