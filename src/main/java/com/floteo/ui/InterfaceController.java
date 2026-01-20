@@ -66,6 +66,7 @@ public class InterfaceController {
     private Connection conn;
     private ServiceDao serviceDao;
     private AgentDao agentDao;
+    private EtatDao etatDao;
     private VehicleDao vehicleDao;
     private AssignmentDao assignmentDao;
     private AssignmentService assignmentService;
@@ -187,6 +188,7 @@ public class InterfaceController {
 
         // initialiser l'écran
         showAccueil();
+        InitVehiculeEtat();
 
         // brancher les events
         bindActions();
@@ -1150,5 +1152,26 @@ public class InterfaceController {
 //        }
 
         return entry;
+    }
+
+    // --- ETAT VEHICULE ---
+    private void InitVehiculeEtat(){
+        try {
+            List<Etat> etats = etatDao.findAll();
+
+            // Ajouter les noms dans le ComboBox
+            comboEtat.getItems().clear(); // vide avant ajout
+            for (Etat e : etats) {
+                comboEtat.getItems().add(e.name());
+            }
+
+            // Optionnel : sélectionner le premier par défaut
+            if (!comboEtat.getItems().isEmpty()) {
+                comboEtat.setValue(comboEtat.getItems().get(0));
+            }
+        }
+        catch(SQLException ex){
+            System.out.println(ex.getMessage());
+        }
     }
 }
