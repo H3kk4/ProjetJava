@@ -37,7 +37,7 @@ jobs:
         run: |
           mvn clean package shade:shade
           # Vérifier que le jar existe
-          ls -l target/*-shaded.jar
+          ls -l target/*.jar
 
       # 6️⃣ Publier le jar et les fichiers nécessaires comme artefacts
       - name: Upload Artifact
