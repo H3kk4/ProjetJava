@@ -17,8 +17,6 @@ public final class SchemaRunner {
             sql = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
                     .lines().collect(Collectors.joining("\n"));
         }
-
-        // Simple: exécute tout d'un coup (OK si ton script est simple)
         try (Statement st = c.createStatement()) {
             st.execute(sql);
         }
