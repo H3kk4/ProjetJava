@@ -58,7 +58,7 @@ public final class VehicleDao {
 
     public Optional<Vehicle> findById(long id) throws SQLException {
         String sql = """
-            SELECT id, plate, type, brand, model, mileage, acquisition_date, status
+            SELECT id, plate, type, brand, model, mileage, acquisition_date, status, etat
             FROM vehicle
             WHERE id = ?
             """;
@@ -74,7 +74,7 @@ public final class VehicleDao {
 
     public Optional<Vehicle> findByPlate(String plate) throws SQLException {
         String sql = """
-            SELECT id, plate, type, brand, model, mileage, acquisition_date, status
+            SELECT id, plate, type, brand, model, mileage, acquisition_date, status, etat
             FROM vehicle
             WHERE plate = ?
             """;
@@ -126,7 +126,7 @@ public final class VehicleDao {
 
     public List<Vehicle> findByStatus(VehicleStatus status) throws SQLException {
         String sql = """
-            SELECT id, plate, type, brand, model, mileage, acquisition_date, status
+            SELECT id, plate, type, brand, model, mileage, acquisition_date, status, etat
             FROM vehicle
             WHERE status = ?
             ORDER BY plate

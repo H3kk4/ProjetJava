@@ -600,7 +600,7 @@ public class InterfaceController {
 
         // Combo état
         if (comboEtat != null) {
-            comboEtat.setItems(FXCollections.observableArrayList("OK", "ABIME", "A CONTROLER"));
+            comboEtat.setItems(FXCollections.observableArrayList("Neuf", "Très bon état", "Bon état", "Mauvais état", "Très mauvais état"));
         }
 
         reloadAffectationAgentsData();
@@ -636,7 +636,7 @@ public class InterfaceController {
         assignmentService.assignVehicle(veh.id(), agent.id(), LocalDate.now());
 
         reloadAffectationAgentsData();
-        reloadVehicles(); // si tu veux rafraîchir aussi l’autre page
+        reloadVehicles();
     }
 
     private void onRetirerAffectationVehicule() throws Exception {
