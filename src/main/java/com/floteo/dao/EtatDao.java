@@ -10,14 +10,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * DAO pour la table "etat".
+ * Permet de lire les différents états disponibles en base.
+ */
 public class EtatDao {
 
+    /** Connexion JDBC utilisée pour les requêtes SQL. */
     private final Connection conn;
 
     public EtatDao(Connection conn) {
         this.conn = conn;
     }
 
+    /**
+     * Retourne tous les états présents en base.
+     */
     public List<Etat> findAll() throws SQLException {
         String sql = """
             SELECT id, name
@@ -35,11 +43,15 @@ public class EtatDao {
         }
     }
 
+    /**
+     * Recherche un état par son nom.
+     * @return Optional.empty() si aucun état ne correspond
+     */
     public Optional<Etat> findByName(String name) throws SQLException {
         String sql = """
             SELECT id, name
             FROM etat
-            WHERE name= ?
+            WHERE name = ?
         """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, name);
@@ -51,6 +63,9 @@ public class EtatDao {
         }
     }
 
+    /**
+     * Convertit une ligne SQL en objet Etat.
+     */
     private static Etat map(ResultSet rs) throws SQLException {
         return new Etat(
                 rs.getLong("id"),

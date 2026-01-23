@@ -17,7 +17,7 @@ import java.util.Scanner;
  * de lire les entrées de l'utilisateur et d'appeler les DAO
  * ou les services.
  */
-public final class ConsoleApp {
+public final class ConsoleApp_non_fonctionnel {
     private final Scanner in = new Scanner(System.in);
 
     private final ServiceDao serviceDao;
@@ -32,7 +32,7 @@ public final class ConsoleApp {
      * On reçoit une Connection JDBC et on instancie
      * tous les DAO et le service métier.
      */
-    public ConsoleApp(Connection conn) {
+    public ConsoleApp_non_fonctionnel(Connection conn) {
         this.serviceDao = new ServiceDao(conn);
         this.agentDao = new AgentDao(conn);
         this.etatDao = new EtatDao(conn);

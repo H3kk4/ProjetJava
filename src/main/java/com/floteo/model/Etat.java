@@ -1,3 +1,10 @@
 package com.floteo.model;
 
-public record Etat(long id, String name) { }
+/**
+ * Représente un état possible (table "etat").
+ * Utilisé pour qualifier l'état d'un véhicule.
+ */
+public record Etat(
+        long id,
+        String name
+) { }

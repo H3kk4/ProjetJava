@@ -10,14 +10,18 @@ import javafx.stage.Stage;
 
 import java.sql.Connection;
 
+/**
+ * Point d'entrée de l'application JavaFX.
+ * Initialise la base de données, charge l'interface et lance la fenêtre principale.
+ */
 public class InterfaceApp extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        // 1) Connexion DB
+        // 1) Connexion à la base de données
         Connection conn = Db.connect();
 
-        // 1 bis chargement de la police d'écriture
+        // 1 bis) Chargement des polices personnalisées utilisées par l'interface
         Font.loadFont(
                 getClass().getResourceAsStream("/fonts/gloucester-mt-extra-condensed.ttf"),
                 12
@@ -31,16 +35,15 @@ public class InterfaceApp extends Application {
                 12
         );
 
-
-        // 2) Charger le FXML controller
+        // 2) Chargement du fichier FXML et création de la vue
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/floteo/ui/Interface.fxml"));
         Pane root = loader.load();
 
-        // 3) Injecter la connexion au controller
+        // 3) Récupération du contrôleur et injection de la connexion DB
         InterfaceController controller = loader.getController();
         controller.init(conn);
 
-        // 4) Lancer la fenêtre
+        // 4) Création et affichage de la fenêtre principale
         Scene scene = new Scene(root, 978, 716);
         stage.setScene(scene);
         stage.setTitle("Floteo");
@@ -52,10 +55,13 @@ public class InterfaceApp extends Application {
 
     @Override
     public void stop() throws Exception {
-        // fermer la DB si en variable
+        // Méthode appelée à la fermeture de l'application
         super.stop();
     }
 
+    /**
+     * Méthode principale : lance l'application JavaFX.
+     */
     public static void main(String[] args) {
         launch(args);
     }

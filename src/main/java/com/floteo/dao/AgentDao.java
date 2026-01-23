@@ -10,14 +10,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * DAO (Data Access Object) pour accéder à la table "agent".
+ * Contient les opérations CRUD : Create, Read, Update, Delete.
+ */
 public final class AgentDao {
 
+    /** Connexion JDBC utilisée pour exécuter les requêtes SQL. */
     private final Connection conn;
 
     public AgentDao(Connection conn) {
         this.conn = conn;
     }
 
+    /**
+     * Crée un agent en base et retourne l'agent créé (avec son id).
+     */
     public Agent create(
             String matricule,
             String firstName,
@@ -25,6 +33,7 @@ public final class AgentDao {
             long serviceId
     ) throws SQLException {
 
+        // INSERT avec RETURNING : permet de récupérer directement la ligne insérée.
         String sql = """
             INSERT INTO agent (matricule, first_name, last_name, service_id)
             VALUES (?, ?, ?, ?)
@@ -32,18 +41,23 @@ public final class AgentDao {
             """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            // On remplit les paramètres du PreparedStatement dans l'ordre des ?.
             ps.setString(1, matricule);
             ps.setString(2, firstName);
             ps.setString(3, lastName);
             ps.setLong(4, serviceId);
 
             try (ResultSet rs = ps.executeQuery()) {
-                rs.next();
-                return map(rs);
+                rs.next(); // on se place sur la première (et unique) ligne
+                return map(rs); // transformation ResultSet -> objet Agent
             }
         }
     }
 
+    /**
+     * Cherche un agent par son id.
+     * @return Optional.empty() si non trouvé
+     */
     public Optional<Agent> findById(long id) throws SQLException {
         String sql = """
             SELECT id, matricule, first_name, last_name, service_id
@@ -55,12 +69,17 @@ public final class AgentDao {
             ps.setLong(1, id);
 
             try (ResultSet rs = ps.executeQuery()) {
+                // Si aucune ligne, on renvoie Optional.empty()
                 if (!rs.next()) return Optional.empty();
                 return Optional.of(map(rs));
             }
         }
     }
 
+    /**
+     * Cherche un agent par matricule.
+     * @return Optional.empty() si non trouvé
+     */
     public Optional<Agent> findByMatricule(String matricule) throws SQLException {
         String sql = """
             SELECT id, matricule, first_name, last_name, service_id
@@ -78,6 +97,9 @@ public final class AgentDao {
         }
     }
 
+    /**
+     * Retourne tous les agents triés par nom puis prénom.
+     */
     public List<Agent> findAll() throws SQLException {
         String sql = """
             SELECT id, matricule, first_name, last_name, service_id
@@ -85,6 +107,7 @@ public final class AgentDao {
             ORDER BY last_name, first_name
             """;
 
+        // try-with-resources : ferme automatiquement ps et rs
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
@@ -96,6 +119,9 @@ public final class AgentDao {
         }
     }
 
+    /**
+     * Retourne les agents appartenant à un service donné.
+     */
     public List<Agent> findByServiceId(long serviceId) throws SQLException {
         String sql = """
             SELECT id, matricule, first_name, last_name, service_id
@@ -117,15 +143,23 @@ public final class AgentDao {
         }
     }
 
+    /**
+     * Supprime un agent par id.
+     * @return true si une ligne a été supprimée
+     */
     public boolean delete(long id) throws SQLException {
         String sql = "DELETE FROM agent WHERE id = ?";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
+            // executeUpdate() renvoie le nombre de lignes affectées
             return ps.executeUpdate() == 1;
         }
     }
 
+    /**
+     * Convertit une ligne SQL (ResultSet) en objet Agent.
+     */
     private static Agent map(ResultSet rs) throws SQLException {
         return new Agent(
                 rs.getLong("id"),
@@ -136,6 +170,10 @@ public final class AgentDao {
         );
     }
 
+    /**
+     * Met à jour les infos d'un agent.
+     * @return true si une ligne a été modifiée
+     */
     public boolean update(long id, String matricule, String firstName, String lastName, long serviceId) throws SQLException {
         String sql = """
         UPDATE agent
@@ -152,6 +190,10 @@ public final class AgentDao {
         }
     }
 
+    /**
+     * Recherche simple (texte) sur matricule / prénom / nom.
+     * Si q est vide, renvoie tous les agents.
+     */
     public List<Agent> findByText(String q) throws SQLException {
         String sql = """
         SELECT id, matricule, first_name, last_name, service_id
@@ -160,10 +202,12 @@ public final class AgentDao {
         ORDER BY last_name, first_name
         """;
 
+        // Normalisation de la recherche (évite null)
         String text = (q == null) ? "" : q.trim();
         String like = "%" + text + "%";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            // Astuce : le 1er paramètre sert à tester "q vide ?"
             ps.setString(1, text);
             ps.setString(2, like);
             ps.setString(3, like);
@@ -176,6 +220,4 @@ public final class AgentDao {
             }
         }
     }
-
-
 }

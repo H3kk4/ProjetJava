@@ -13,14 +13,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * DAO pour la table "vehicle".
+ * Gère les opérations CRUD + quelques recherches spécifiques (status, recherche texte, types).
+ */
 public final class VehicleDao {
 
+    /** Connexion JDBC utilisée pour exécuter les requêtes SQL. */
     private final Connection conn;
 
     public VehicleDao(Connection conn) {
         this.conn = conn;
     }
 
+    /**
+     * Crée un véhicule en base et retourne le véhicule créé (avec son id).
+     */
     public Vehicle create(
             String plate,
             String type,
@@ -32,6 +40,7 @@ public final class VehicleDao {
             long etat
     ) throws SQLException {
 
+        // INSERT avec RETURNING : récupère directement l'objet inséré (PostgreSQL).
         String sql = """
             INSERT INTO vehicle
               (plate, type, brand, model, mileage, acquisition_date, status, etat)
@@ -40,22 +49,27 @@ public final class VehicleDao {
             """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            // Remplissage des paramètres dans l'ordre des "?"
             ps.setString(1, plate);
             ps.setString(2, type);
             ps.setString(3, brand);
             ps.setString(4, model);
             ps.setInt(5, mileage);
-            ps.setDate(6, Date.valueOf(acquisitionDate));
-            ps.setString(7, status.name());
-            ps.setLong(8, etat);
+            ps.setDate(6, Date.valueOf(acquisitionDate)); // LocalDate -> java.sql.Date
+            ps.setString(7, status.name());               // Enum -> String (nom exact)
+            ps.setLong(8, etat);                          // id ou référence vers l'état
 
             try (ResultSet rs = ps.executeQuery()) {
-                rs.next();
+                rs.next(); // une seule ligne attendue
                 return map(rs);
             }
         }
     }
 
+    /**
+     * Recherche un véhicule par son id.
+     * @return Optional.empty() si non trouvé
+     */
     public Optional<Vehicle> findById(long id) throws SQLException {
         String sql = """
             SELECT id, plate, type, brand, model, mileage, acquisition_date, status, etat
@@ -72,6 +86,10 @@ public final class VehicleDao {
         }
     }
 
+    /**
+     * Recherche un véhicule par sa plaque.
+     * @return Optional.empty() si non trouvé
+     */
     public Optional<Vehicle> findByPlate(String plate) throws SQLException {
         String sql = """
             SELECT id, plate, type, brand, model, mileage, acquisition_date, status, etat
@@ -88,6 +106,9 @@ public final class VehicleDao {
         }
     }
 
+    /**
+     * Retourne tous les véhicules, triés par plaque.
+     */
     public List<Vehicle> findAll() throws SQLException {
         String sql = """
             SELECT id, plate, type, brand, model, mileage, acquisition_date, status, etat
@@ -106,6 +127,10 @@ public final class VehicleDao {
         }
     }
 
+    /**
+     * Retourne la liste des libellés de types de véhicules (table vehicle_type).
+     * Utile pour remplir une liste déroulante côté UI.
+     */
     public List<String> findAllTypeLabels() throws SQLException {
         String sql = """
         SELECT label
@@ -122,8 +147,9 @@ public final class VehicleDao {
         }
     }
 
-
-
+    /**
+     * Retourne les véhicules ayant un statut donné (DISPONIBLE, EN_MISSION, etc.).
+     */
     public List<Vehicle> findByStatus(VehicleStatus status) throws SQLException {
         String sql = """
             SELECT id, plate, type, brand, model, mileage, acquisition_date, status, etat
@@ -145,6 +171,10 @@ public final class VehicleDao {
         }
     }
 
+    /**
+     * Met à jour uniquement le statut d'un véhicule.
+     * @return true si une ligne a été modifiée
+     */
     public boolean updateStatus(long id, VehicleStatus status) throws SQLException {
         String sql = "UPDATE vehicle SET status = ? WHERE id = ?";
 
@@ -155,6 +185,10 @@ public final class VehicleDao {
         }
     }
 
+    /**
+     * Supprime un véhicule par id.
+     * @return true si une ligne a été supprimée
+     */
     public boolean delete(long id) throws SQLException {
         String sql = "DELETE FROM vehicle WHERE id = ?";
 
@@ -164,6 +198,9 @@ public final class VehicleDao {
         }
     }
 
+    /**
+     * Convertit une ligne SQL en objet Vehicle.
+     */
     private static Vehicle map(ResultSet rs) throws SQLException {
         return new Vehicle(
                 rs.getLong("id"),
@@ -172,12 +209,16 @@ public final class VehicleDao {
                 rs.getString("brand"),
                 rs.getString("model"),
                 rs.getInt("mileage"),
-                rs.getDate("acquisition_date").toLocalDate(),
-                VehicleStatus.valueOf(rs.getString("status")),
+                rs.getDate("acquisition_date").toLocalDate(),       // Date SQL -> LocalDate
+                VehicleStatus.valueOf(rs.getString("status")),      // String -> Enum
                 rs.getLong("etat")
         );
     }
 
+    /**
+     * Recherche des véhicules DISPONIBLES filtrés par texte (plaque / marque / modèle).
+     * Si q est vide, renvoie tous les véhicules disponibles.
+     */
     public List<Vehicle> findAvailableByText(String q) throws SQLException {
         String sql = """
     SELECT id, plate, type, brand, model, mileage, acquisition_date, status, etat
@@ -187,10 +228,12 @@ public final class VehicleDao {
     ORDER BY plate
     """;
 
+        // Normalisation de la recherche : évite null, supprime espaces.
         String text = (q == null) ? "" : q.trim();
         String like = "%" + text + "%";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            // Le premier paramètre sert à tester si la recherche est vide.
             ps.setString(1, text);
             ps.setString(2, like);
             ps.setString(3, like);
@@ -204,6 +247,10 @@ public final class VehicleDao {
         }
     }
 
+    /**
+     * Met à jour toutes les infos principales d'un véhicule.
+     * @return true si une ligne a été modifiée
+     */
     public boolean update(
             long id,
             String plate,
@@ -233,6 +280,4 @@ public final class VehicleDao {
             return ps.executeUpdate() == 1;
         }
     }
-
-
 }

@@ -15,14 +15,12 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 
-import java.io.Console;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -30,18 +28,33 @@ import java.util.*;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.layout.StackPane;
 
-
 import java.time.LocalDate;
-
-
 import java.sql.Connection;
 
+/**
+ * Contrôleur principal JavaFX (lié au fichier Interface.fxml).
+ *
+ * Rôles principaux :
+ * - Navigation entre les différents "écrans" (Pane) de l'application.
+ * - Gestion CRUD des Agents et des Véhicules.
+ * - Gestion des Affectations (demandes, acceptation, clôture/refus).
+ * - Affichage d'un calendrier (CalendarFX) des réservations.
+ *
+ * Remarque : ce contrôleur est "gros" (centralise beaucoup),
+ * Nous n'avons pas eu le temps de séparer en plusieurs controlleurs... Désolé :/
+ */
 public class InterfaceController {
 
+    // ----------------------------
+    //     ICONES DE NAVIGATION
+    // ----------------------------
     @FXML private javafx.scene.shape.SVGPath svgBack;
     @FXML private javafx.scene.shape.SVGPath svgHome;
 
-    // --- PANES ---
+    // ----------------------------
+    //            PANES
+    // (chaque Pane = un écran / sous-écran)
+    // ----------------------------
     @FXML private Pane paneAccueil;
     @FXML private Pane paneGestionVehicules;
     @FXML private Pane paneDashboardVehicules;
@@ -52,34 +65,47 @@ public class InterfaceController {
     @FXML private Pane paneListeAffectations;
     @FXML private Pane paneAffectationAgent;
 
-    // --- BUTTONS ---
+    // ----------------------------
+    //           BOUTONS
+    // ----------------------------
     @FXML private Button btnGestionVehicules;
     @FXML private Button btnAffectationAgents;
     @FXML private Button btnBack;
     @FXML private Button btnHome;
     @FXML private Button btnVehicules;
 
-    // --- DB / DAO / SERVICES ---
+    // ----------------------------
+    //    DB / DAO / SERVICES
+    // ----------------------------
+    /** Connexion JDBC injectée depuis InterfaceApp (une seule connexion partagée). */
     private Connection conn;
+
+    /** DAO : accès aux tables en base. */
     private ServiceDao serviceDao;
     private AgentDao agentDao;
     private EtatDao etatDao;
     private VehicleDao vehicleDao;
     private AssignmentDao assignmentDao;
+
+    /** Service métier : règles d'affectation (assign, end, etc.). */
     private AssignmentService assignmentService;
 
-    // --- AGENTS ---
+    // ----------------------------
+    //              AGENTS
+    // ----------------------------
     @FXML private TableView<Agent> tabAgents;
     @FXML private TableColumn<Agent, String> colNomAgent;
     @FXML private TableColumn<Agent, String> colPrenomAgent;
     @FXML private TableColumn<Agent, String> colMatAgent;
 
+    // Formulaire agent
     @FXML private TextField tfNomAgent;
     @FXML private TextField tPrenomAgent;
     @FXML private TextField tfMatAgent;
 
     @FXML private ComboBox<Service> comboServiceAgent;
 
+    // Boutons CRUD agent
     @FXML private Button btnModifierAgent;
     @FXML private Button btnSupprimerAgent;
     @FXML private Button btnSauvegarderAgent;
@@ -90,7 +116,7 @@ public class InterfaceController {
     @FXML private Button btnAffecterVehicule;
     @FXML private Button btnRetirerAffectation;
 
-
+    // Ecran "Affectation Agent <-> Véhicule" (liste agents)
     @FXML private TableView<Agent> tabAListeAgents;
     @FXML private TableColumn<Agent, String> colANomAgent;
     @FXML private TableColumn<Agent, String> colAPrenomAgent;
@@ -100,8 +126,9 @@ public class InterfaceController {
     @FXML private Button btnAffecter;
     @FXML private Button btnRetirer;
 
-
-    // --- VEHICULE ---
+    // ----------------------------
+    //             VEHICULES
+    // ----------------------------
     @FXML private TextField tfMarque;
     @FXML private TextField tfModele;
     @FXML private TextField tfImmat;
@@ -111,6 +138,7 @@ public class InterfaceController {
     @FXML private ComboBox<String> comboEtat;
     @FXML private ComboBox<VehicleStatus> comboStatus;
 
+    // Boutons CRUD + actions rapides
     @FXML private Button btnModifierVehicule;
     @FXML private Button btnSupprimerVehicule;
     @FXML private Button btnSauvegarderVehicule;
@@ -119,11 +147,13 @@ public class InterfaceController {
     @FXML private Button btnRendreIndisponible;
     @FXML private Button btnRendreDisponible;
 
+    // Table véhicules (liste principale)
     @FXML private TableView<Vehicle> tabVehicules;
     @FXML private TableColumn<Vehicle, String> colVehicule;
     @FXML private TableColumn<Vehicle, String> colImmat;
     @FXML private TableColumn<Vehicle, VehicleStatus> colStatus;
 
+    // Table véhicules (écran affectation)
     @FXML private TableView<Vehicle> tabAListeVehicules;
     @FXML private TableColumn<Vehicle, String> colAMarque;
     @FXML private TableColumn<Vehicle, String> colAModele;
@@ -131,12 +161,15 @@ public class InterfaceController {
     @FXML private TableColumn<Vehicle, String> colAStatus;
     @FXML private TableColumn<Vehicle, String> colAEtat;
 
+    // Dashboard véhicules
     @FXML private javafx.scene.control.Label lblDate;
     @FXML private javafx.scene.control.Label lblDisponibles;
     @FXML private javafx.scene.control.Label lblIndisponibles;
     @FXML private javafx.scene.control.Label lblReserves;
 
-    // --- AFFECTATIONS (liste) ---
+    // ----------------------------
+    //      AFFECTATIONS (liste)
+    // ----------------------------
     @FXML private TableView<AssignmentRow> tabListeAffectations;
     @FXML private TableColumn<AssignmentRow, String> colLADateDemande;
     @FXML private TableColumn<AssignmentRow, String> colLAAgent;
@@ -151,6 +184,7 @@ public class InterfaceController {
     @FXML private Button btnVoirAgent;
     @FXML private Button btnVoirVehicule;
 
+    // Recherche
     @FXML private TextField tfChercherVehicule;
     @FXML private Button btnGoVehicule;
     @FXML private TextField tfRechercherAgent;
@@ -158,41 +192,64 @@ public class InterfaceController {
     @FXML private TextField tfRechercherVehicule;
     @FXML private Button btnGoVehicules;
 
-    // --- CALENDRIER ---
+    // ----------------------------
+    //            CALENDRIER
+    // ----------------------------
     @FXML private StackPane calendarContainer;
     @FXML private Button btnCalendrier;
     private Parent calendarRoot;
 
+    /** Liste observable pour la TableView d'affectations (UI). */
     private final ObservableList<AssignmentRow> affectations = FXCollections.observableArrayList();
+
+    /** Format d'affichage des dates (UI). */
     private final DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
+    /** Liste observable des véhicules (UI). */
     private ObservableList<Vehicle> vehicles = FXCollections.observableArrayList();
 
+    /**
+     * Flags de mode : on distingue "Ajouter" et "Modifier" pour empêcher une sauvegarde ambiguë.
+     */
     private boolean editMode = false;
     private boolean createMode = false;
     private boolean agentEditMode = false;
     private boolean agentCreateMode = false;
 
+    /**
+     * Cache idEtat -> nomEtat.
+     * Utile pour retrouver rapidement l'id correspondant au libellé choisi en ComboBox.
+     */
     private Map<Long, String> etatIdToName = new HashMap<>();
 
-    /** appelée depuis InterfaceApp après le load() */
+    /**
+     * Appelée depuis InterfaceApp après le load().
+     * Initialise les DAO / services puis configure l'écran et les événements.
+     */
     public void init(Connection conn) {
         this.conn = conn;
 
+        // DAO (accès DB)
         this.serviceDao = new ServiceDao(conn);
         this.agentDao = new AgentDao(conn);
         this.etatDao = new EtatDao(conn);
         this.vehicleDao = new VehicleDao(conn);
         this.assignmentDao = new AssignmentDao(conn);
+
+        // Service métier (règles d'affectation)
         this.assignmentService = new AssignmentService(conn, agentDao, vehicleDao, assignmentDao);
 
-        // initialiser l'écran
+        // écran par défaut
         showAccueil();
 
-        // brancher les events
+        // branchement des actions (boutons)
         bindActions();
     }
 
+    /**
+     * Branche les boutons vers les méthodes de navigation.
+     * La navigation utilise navigateTo(...) pour gérer l'historique (retour).
+     */
     private void bindActions() {
         btnGestionVehicules.setOnAction(e -> navigateTo(this::showGestionVehiculesDashboard));
         btnAffectationAgents.setOnAction(e -> navigateTo(this::showGestionAgentsMenu));
@@ -207,7 +264,11 @@ public class InterfaceController {
         }
     }
 
-    // --- NAVIGATION ---
+    // ----------------------------
+    //           NAVIGATION
+    // ----------------------------
+
+    /** Cache tous les panes avant d'afficher celui qui nous intéresse. */
     private void hideAll() {
         paneAccueil.setVisible(false);
         paneGestionVehicules.setVisible(false);
@@ -219,10 +280,13 @@ public class InterfaceController {
         paneListeAgents.setVisible(false);
         paneListeAffectations.setVisible(false);
         paneAffectationAgent.setVisible(false);
+
+        // icônes visibles par défaut
         svgBack.setVisible(true);
         svgHome.setVisible(true);
     }
 
+    /** Affiche la page d'accueil (pas de back/home). */
     private void showAccueil() {
         hideAll();
         paneAccueil.setVisible(true);
@@ -232,6 +296,7 @@ public class InterfaceController {
         svgHome.setVisible(true);
     }
 
+    /** Affiche le dashboard des véhicules (compteurs par statut). */
     private void showGestionVehiculesDashboard() {
         hideAll();
         paneGestionVehicules.setVisible(true);
@@ -242,10 +307,12 @@ public class InterfaceController {
         loadDashboardVehicules();
     }
 
+    /** Charge et affiche les statistiques véhicules du dashboard. */
     private void loadDashboardVehicules() {
         try {
             lblDate.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
 
+            // Comptage des véhicules par statut
             Map<VehicleStatus, Integer> counts = new EnumMap<>(VehicleStatus.class);
             for (VehicleStatus s : VehicleStatus.values()) counts.put(s, 0);
 
@@ -253,11 +320,12 @@ public class InterfaceController {
                 counts.put(v.status(), counts.get(v.status()) + 1);
             }
 
+            // Mapping UI (réservés = AFFECTE)
             lblDisponibles.setText(String.valueOf(counts.getOrDefault(VehicleStatus.DISPONIBLE, 0)));
             lblIndisponibles.setText(String.valueOf(counts.getOrDefault(VehicleStatus.ENTRETIEN, 0)));
-            // "Réservés" = AFFECTE
             lblReserves.setText(String.valueOf(counts.getOrDefault(VehicleStatus.AFFECTE, 0)));
 
+            // Initialise la liste des états (comboEtat)
             initVehiculeEtat();
 
         } catch (Exception e) {
@@ -265,8 +333,10 @@ public class InterfaceController {
         }
     }
 
+    /** Flag : on initialise l'UI véhicules une seule fois. */
     private boolean vehiclesUiInitialized = false;
 
+    /** Affiche l'écran liste des véhicules (init 1 fois, sinon reload). */
     private void showListeVehicules() {
         hideAll();
         paneGestionVehicules.setVisible(true);
@@ -282,6 +352,7 @@ public class InterfaceController {
         }
     }
 
+    /** Affiche l'écran "menu gestion agents". */
     private void showGestionAgentsMenu() {
         hideAll();
         paneGestionAgents.setVisible(true);
@@ -290,10 +361,11 @@ public class InterfaceController {
         btnHome.setVisible(true);
     }
 
+    // Historique de navigation : on stocke les vues précédentes.
     private final java.util.ArrayDeque<Runnable> navStack = new java.util.ArrayDeque<>();
     private Runnable currentView = null;
 
-    // --- NAV HISTORY ---
+    /** Va vers une vue en enregistrant l'historique (pour revenir en arrière). */
     private void navigateTo(Runnable view) {
         if (currentView != null) navStack.push(currentView);
         currentView = view;
@@ -302,6 +374,7 @@ public class InterfaceController {
         btnHome.setVisible(true);
     }
 
+    /** Retour à la vue précédente. */
     private void goBack() {
         if (navStack.isEmpty()) {
             showAccueil();
@@ -313,17 +386,23 @@ public class InterfaceController {
         btnHome.setVisible(true);
     }
 
+    /** Retour accueil : reset complet de l'historique. */
     private void goHome() {
         navStack.clear();
         currentView = null;
         showAccueil();
     }
 
-    //--- AGENT ---
+    // ----------------------------
+    //             AGENTS
+    // ----------------------------
+
+    // Flags : init UI une seule fois
     private boolean agentsUiInitialized = false;
     private boolean affectationsUiInitialized = false;
     private boolean affectationAgentsUiInitialized = false;
 
+    /** Affiche la liste agents + init au premier affichage. */
     private void showListeAgents() {
         hideAll();
         paneGestionAgents.setVisible(true);
@@ -339,6 +418,7 @@ public class InterfaceController {
         }
     }
 
+    /** Affiche la liste des affectations + init au premier affichage. */
     private void showListeAffectations() {
         hideAll();
         paneGestionAgents.setVisible(true);
@@ -354,6 +434,7 @@ public class InterfaceController {
         }
     }
 
+    /** Affiche l'écran d'affectation Agent/Véhicule + init au premier affichage. */
     private void showAffectationAgents() {
         hideAll();
         paneGestionAgents.setVisible(true);
@@ -369,25 +450,35 @@ public class InterfaceController {
         }
     }
 
+    /** Données UI : listes observables. */
     private final ObservableList<Agent> agents = FXCollections.observableArrayList();
     private final ObservableList<Service> services = FXCollections.observableArrayList();
 
+    /**
+     * Initialise l'UI "agents" :
+     * - colonnes
+     * - listeners de sélection
+     * - boutons CRUD
+     * - chargement initial des données
+     */
     private void initAgentsUi() {
-        // colonnes
+        // Colonnes TableView
         colNomAgent.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().lastName()));
         colPrenomAgent.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().firstName()));
         colMatAgent.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().matricule()));
 
         tabAgents.setItems(agents);
 
+        // Quand on sélectionne un agent, on remplit le formulaire
         tabAgents.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> {
             if (n != null) fillAgentForm(n);
         });
 
-        // services dans combo
+        // Chargement services pour la ComboBox
         reloadServicesForCombo();
         comboServiceAgent.setItems(services);
 
+        // Actions CRUD
         btnAjouterAgent.setOnAction(e -> onAddAgent());
         btnModifierAgent.setOnAction(e -> onEditAgent());
         btnSauvegarderAgent.setOnAction(e -> {
@@ -399,8 +490,10 @@ public class InterfaceController {
             catch (Exception ex) { showError(ex.getMessage()); }
         });
 
+        // Form en lecture seule au départ
         setAgentFormEditable(false);
 
+        // affecter un véhicule à l'agent sélectionné
         if (btnAffecterVehicule != null) {
             btnAffecterVehicule.setOnAction(e -> {
                 Agent a = tabAgents.getSelectionModel().getSelectedItem();
@@ -411,6 +504,7 @@ public class InterfaceController {
             });
         }
 
+        // voir la liste des affectations de l'agent sélectionné
         if (btnRetirerAffectation != null) {
             btnRetirerAffectation.setOnAction(e -> {
                 Agent a = tabAgents.getSelectionModel().getSelectedItem();
@@ -424,6 +518,7 @@ public class InterfaceController {
         reloadAgents();
     }
 
+    /** Pré-sélectionne un agent dans l'écran "Affectation" à partir de son id. */
     private void selectAgentInAffectationById(long id) {
         for (Agent a : agentsA) {
             if (a.id() == id) {
@@ -434,6 +529,7 @@ public class InterfaceController {
         }
     }
 
+    /** Active/Désactive l'édition du formulaire agent. */
     private void setAgentFormEditable(boolean editable) {
         tfNomAgent.setEditable(editable);
         tPrenomAgent.setEditable(editable);
@@ -441,6 +537,7 @@ public class InterfaceController {
         comboServiceAgent.setDisable(!editable);
     }
 
+    /** Vide le formulaire agent. */
     private void clearAgentForm() {
         tfNomAgent.clear();
         tPrenomAgent.clear();
@@ -448,6 +545,7 @@ public class InterfaceController {
         comboServiceAgent.setValue(null);
     }
 
+    /** Passage en mode création d'agent. */
     private void onAddAgent() {
         clearAgentForm();
         setAgentFormEditable(true);
@@ -455,6 +553,7 @@ public class InterfaceController {
         agentEditMode = false;
     }
 
+    /** Passage en mode édition d'agent (sur agent sélectionné). */
     private void onEditAgent() {
         Agent selected = tabAgents.getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -466,6 +565,11 @@ public class InterfaceController {
         agentCreateMode = false;
     }
 
+    /**
+     * Sauvegarde agent :
+     * - si agentCreateMode : INSERT
+     * - si agentEditMode   : UPDATE
+     */
     private void onSaveAgent() throws Exception {
         String lastName = tfNomAgent.getText().trim();
         String firstName = tPrenomAgent.getText().trim();
@@ -476,6 +580,7 @@ public class InterfaceController {
             throw new IllegalArgumentException("Tous les champs agent sont obligatoires.");
         }
 
+        // Création
         if (agentCreateMode) {
             Agent created = agentDao.create(matricule, firstName, lastName, service.id());
             reloadAgents();
@@ -487,6 +592,7 @@ public class InterfaceController {
             return;
         }
 
+        // Edition
         if (agentEditMode) {
             Agent selected = tabAgents.getSelectionModel().getSelectedItem();
             if (selected == null) throw new IllegalStateException("Aucun agent sélectionné.");
@@ -503,6 +609,7 @@ public class InterfaceController {
         showError("Clique sur Ajouter ou Modifier avant de sauvegarder.");
     }
 
+    /** Supprime l'agent sélectionné (avec confirmation). */
     private void onDeleteAgent() throws Exception {
         Agent selected = tabAgents.getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -525,12 +632,13 @@ public class InterfaceController {
         setAgentFormEditable(false);
     }
 
+    /** Remplit le formulaire avec l'agent sélectionné. */
     private void fillAgentForm(Agent a) {
         tfNomAgent.setText(a.lastName());
         tPrenomAgent.setText(a.firstName());
         tfMatAgent.setText(a.matricule());
 
-        // sélectionner le service correspondant
+        // Sélectionner le service correspondant
         for (Service s : services) {
             if (s.id() == a.serviceId()) {
                 comboServiceAgent.setValue(s);
@@ -538,12 +646,13 @@ public class InterfaceController {
             }
         }
 
+        // En sélection, on repasse en lecture seule et on sort des modes
         setAgentFormEditable(false);
         agentCreateMode = false;
         agentEditMode = false;
     }
 
-
+    /** Recharge la liste agents depuis la base. */
     private void reloadAgents() {
         try {
             agents.setAll(agentDao.findAll());
@@ -552,6 +661,7 @@ public class InterfaceController {
         }
     }
 
+    /** Recharge la liste des services (ComboBox). */
     private void reloadServicesForCombo() {
         try {
             services.setAll(serviceDao.findAll());
@@ -560,15 +670,41 @@ public class InterfaceController {
         }
     }
 
+    // ----------------------------
+    //  AFFECTATION AGENT <-> VEH
+    // ----------------------------
+
+    /** Listes UI pour l'écran d'affectation. */
     private final ObservableList<com.floteo.model.Agent> agentsA = FXCollections.observableArrayList();
     private final ObservableList<Vehicle> vehiclesA = FXCollections.observableArrayList();
 
+    /**
+     * Initialise l'écran "affectation" :
+     * - colonnes table agents + véhicules
+     * - boutons Affecter / Retirer
+     * - champs de recherche
+     * - chargement initial des données
+     */
     private void initAffectationAgentsUi() {
         // colonnes agents
         colANomAgent.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().lastName()));
         colAPrenomAgent.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().firstName()));
         colAMatAgent.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().matricule()));
-        colAServiceAgent.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().serviceId())));
+
+        // aller chercher le nom du service pour lier agent.serviceId -> service.name
+        reloadServicesForCombo();
+
+        // Map locale idService -> nomService
+        final Map<Long, String> idToName = new HashMap<>();
+        for (Service s : services) {
+            idToName.put(s.id(), s.name());
+        }
+
+        colAServiceAgent.setCellValueFactory(c ->
+                new SimpleStringProperty(idToName.getOrDefault(c.getValue().serviceId(), "—"))
+        );
+
+
 
         tabAListeAgents.setItems(agentsA);
 
@@ -587,18 +723,20 @@ public class InterfaceController {
             catch (Exception ex) { showError(ex.getMessage()); }
         });
 
+        // Ici btnCloturer sert à "cloturer" une affectation (fin d'affectation active)
         btnCloturer.setOnAction(e -> {
             try { onRetirerAffectationVehicule(); }
             catch (Exception ex) { showError(ex.getMessage()); }
         });
 
+        // Recherche agent / véhicule
         if (btnGoAgents != null) btnGoAgents.setOnAction(e -> reloadAffectationAgentsData());
         if (tfRechercherAgent != null) tfRechercherAgent.setOnAction(e -> reloadAffectationAgentsData());
 
         if (btnGoVehicules != null) btnGoVehicules.setOnAction(e -> reloadAffectationAgentsData());
         if (tfRechercherVehicule != null) tfRechercherVehicule.setOnAction(e -> reloadAffectationAgentsData());
 
-        // Combo état
+        // Combo état (valeurs "UI") libellé fixes
         if (comboEtat != null) {
             comboEtat.setItems(FXCollections.observableArrayList("Neuf", "Très bon état", "Bon état", "Mauvais état", "Très mauvais état"));
         }
@@ -606,6 +744,7 @@ public class InterfaceController {
         reloadAffectationAgentsData();
     }
 
+    /** Pré-sélectionne un véhicule dans l'écran affectation à partir de son id. */
     private void selectVehicleInAffectationById(long id) {
         for (Vehicle v : vehiclesA) {
             if (v.id() == id) {
@@ -616,6 +755,11 @@ public class InterfaceController {
         }
     }
 
+    /**
+     * Recharge les données de l'écran affectation :
+     * - agents filtrés par texte
+     * - véhicules DISPONIBLES filtrés par texte
+     */
     private void reloadAffectationAgentsData() {
         try {
             String qa = (tfRechercherAgent == null) ? "" : tfRechercherAgent.getText();
@@ -628,6 +772,7 @@ public class InterfaceController {
         }
     }
 
+    /** Affecte le véhicule sélectionné à l'agent sélectionné (date = aujourd'hui). */
     private void onAffecterAgentVehicule() throws Exception {
         var agent = (com.floteo.model.Agent) tabAListeAgents.getSelectionModel().getSelectedItem();
         var veh   = (Vehicle) tabAListeVehicules.getSelectionModel().getSelectedItem();
@@ -639,6 +784,7 @@ public class InterfaceController {
         reloadVehicles();
     }
 
+    /** Termine l'affectation active d'un véhicule (date de fin = aujourd'hui). */
     private void onRetirerAffectationVehicule() throws Exception {
         var veh = (Vehicle) tabAListeVehicules.getSelectionModel().getSelectedItem();
         if (veh == null) throw new IllegalArgumentException("Sélectionne un véhicule.");
@@ -648,7 +794,18 @@ public class InterfaceController {
         reloadVehicles();
     }
 
-    // --- VEHICULE ---
+    // ----------------------------
+    //            VEHICULES
+    // ----------------------------
+
+    /**
+     * Initialise l'UI véhicules :
+     * - colonnes table
+     * - listeners de sélection
+     * - combobox (type/status)
+     * - handlers CRUD et actions rapides
+     * - chargement initial
+     */
     private void initVehiclesUi() {
         // colonnes
         colVehicule.setCellValueFactory(cell ->
@@ -666,10 +823,12 @@ public class InterfaceController {
         // table data
         tabVehicules.setItems(vehicles);
 
-        // sélection - remplissage du panneau détail
+        // remplir le formulaire + activer/désactiver boutons selon status
         tabVehicules.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> {
             if (newV != null) {
                 fillVehicleForm(newV);
+
+                // Gestion UI selon statut du véhicule
                 if (newV.status() == VehicleStatus.ENTRETIEN) {
                     btnAffecterAgent.setDisable(true);
                     btnRendreDisponible.setDisable(false);
@@ -680,13 +839,14 @@ public class InterfaceController {
                     btnRendreDisponible.setDisable(true);
                     btnRendreIndisponible.setDisable(false);
                 }
+
                 setVehicleFormEditable(false);
                 editMode = false;
                 createMode = false;
             }
         });
 
-        // boutons
+        // boutons CRUD
         btnAjouterVehicule.setOnAction(e -> onAddVehicle());
         btnModifierVehicule.setOnAction(e -> onEditVehicle());
         btnSauvegarderVehicule.setOnAction(e -> {
@@ -698,14 +858,16 @@ public class InterfaceController {
             catch (Exception ex) { showError(ex.getMessage()); }
         });
 
-        // Actions rapides véhicule
+        // Actions rapides véhicule : rendre disponible / indisponible
         if (btnRendreDisponible != null) {
             btnRendreDisponible.setOnAction(e -> {
                 try {
-                    System.out.println( "btnRendreDisponible clicked");
+                    System.out.println("btnRendreDisponible clicked");
                     Vehicle v = tabVehicules.getSelectionModel().getSelectedItem();
                     if (v == null) throw new IllegalArgumentException("Sélectionne un véhicule.");
                     vehicleDao.updateStatus(v.id(), VehicleStatus.DISPONIBLE);
+
+                    // Mise à jour UI immédiate + reload
                     btnAffecterAgent.setDisable(false);
                     btnRendreDisponible.setDisable(true);
                     btnRendreIndisponible.setDisable(false);
@@ -722,6 +884,8 @@ public class InterfaceController {
                     Vehicle v = tabVehicules.getSelectionModel().getSelectedItem();
                     if (v == null) throw new IllegalArgumentException("Sélectionne un véhicule.");
                     vehicleDao.updateStatus(v.id(), VehicleStatus.ENTRETIEN);
+
+                    // Mise à jour UI immédiate + reload
                     btnAffecterAgent.setDisable(true);
                     btnRendreDisponible.setDisable(false);
                     btnRendreIndisponible.setDisable(true);
@@ -732,23 +896,25 @@ public class InterfaceController {
             });
         }
 
+        // affecter un véhicule depuis la liste véhicules
         if (btnAffecterAgent != null) {
             btnAffecterAgent.setOnAction(e -> {
                 Vehicle v = tabVehicules.getSelectionModel().getSelectedItem();
                 if (v == null) { showError("Sélectionne un véhicule."); return; }
-                // on bascule sur l’écran d’affectation et on pré-sélectionne le véhicule
+
+                // Bascule sur l’écran d’affectation et pré-sélectionne le véhicule
                 showAffectationAgents();
                 reloadAffectationAgentsData();
                 selectVehicleInAffectationById(v.id());
             });
         }
 
-
         // état initial
         setVehicleFormEditable(false);
         reloadVehicles();
     }
 
+    /** Recharge les types de véhicules (table vehicle_type) dans comboType. */
     private void reloadVehicleTypes() {
         try {
             comboType.setItems(FXCollections.observableArrayList(vehicleDao.findAllTypeLabels()));
@@ -758,7 +924,7 @@ public class InterfaceController {
         }
     }
 
-
+    /** Recharge la liste des véhicules depuis la base. */
     private void reloadVehicles() {
         try {
             vehicles.setAll(vehicleDao.findAll());
@@ -767,6 +933,7 @@ public class InterfaceController {
         }
     }
 
+    /** Remplit le formulaire véhicule avec les données du véhicule sélectionné. */
     private void fillVehicleForm(Vehicle v) {
         tfMarque.setText(v.brand());
         tfModele.setText(v.model());
@@ -775,10 +942,11 @@ public class InterfaceController {
         comboType.setValue(v.type());
         comboStatus.setValue(v.status());
 
+        // Sélection de l'état (comboEtat) en comparant l'id "etat" du véhicule
         try {
             if (v.etat() != 0 && comboEtat.getItems() != null) {
                 for (String etatName : comboEtat.getItems()) {
-                    // rechercher le nom correspondant à l'id du véhicule
+                    // id correspondant à un nom d'état (DAO)
                     Optional<Etat> etat = etatDao.findByName(etatName);
                     if (etat != null && etat.get().id() == v.etat()) {
                         comboEtat.setValue(etatName);
@@ -786,12 +954,12 @@ public class InterfaceController {
                     }
                 }
             }
-        }
-        catch(SQLException ex){
+        } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
     }
 
+    /** Vide le formulaire véhicule. */
     private void clearVehicleForm() {
         tfMarque.clear();
         tfModele.clear();
@@ -801,6 +969,7 @@ public class InterfaceController {
         comboStatus.setValue(null);
     }
 
+    /** Active/Désactive l'édition du formulaire véhicule. */
     private void setVehicleFormEditable(boolean editable) {
         tfMarque.setEditable(editable);
         tfModele.setEditable(editable);
@@ -812,17 +981,19 @@ public class InterfaceController {
         comboEtat.setDisable(!editable);
     }
 
+    /** Mode création véhicule. */
     private void onAddVehicle() {
         clearVehicleForm();
         setVehicleFormEditable(true);
 
-        // valeurs par défaut
+        // Valeur par défaut
         comboStatus.setValue(VehicleStatus.DISPONIBLE);
 
         createMode = true;
         editMode = false;
     }
 
+    /** Mode édition véhicule (sur véhicule sélectionné). */
     private void onEditVehicle() {
         Vehicle selected = tabVehicules.getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -834,6 +1005,11 @@ public class InterfaceController {
         createMode = false;
     }
 
+    /**
+     * Sauvegarde véhicule :
+     * - createMode : INSERT
+     * - editMode   : UPDATE
+     */
     private void onSaveVehicle() throws Exception {
         String plate = tfImmat.getText().trim();
         String brand = tfMarque.getText().trim();
@@ -848,6 +1024,7 @@ public class InterfaceController {
             throw new IllegalArgumentException("Kilométrage invalide.");
         }
 
+        // L'état est choisi via un libellé (ComboBox), puis converti en id
         String etatName = comboEtat.getValue();
         if (etatName == null || etatName.isEmpty()) {
             throw new IllegalArgumentException("L'état du véhicule doit être sélectionné.");
@@ -863,6 +1040,7 @@ public class InterfaceController {
             throw new IllegalArgumentException("Tous les champs véhicule sont obligatoires.");
         }
 
+        // Création
         if (createMode) {
             Vehicle created = vehicleDao.create(
                     plate,
@@ -881,6 +1059,7 @@ public class InterfaceController {
             return;
         }
 
+        // Edition
         if (editMode) {
             Vehicle selected = tabVehicules.getSelectionModel().getSelectedItem();
             if (selected == null) throw new IllegalStateException("Aucun véhicule sélectionné.");
@@ -900,6 +1079,7 @@ public class InterfaceController {
 
             reloadVehicles();
 
+            // Re-sélectionner l'élément mis à jour dans la table
             for (Vehicle v : vehicles) {
                 if (v.id() == selected.id()) {
                     tabVehicules.getSelectionModel().select(v);
@@ -914,6 +1094,7 @@ public class InterfaceController {
         }
     }
 
+    /** Supprime le véhicule sélectionné (avec confirmation). */
     private void onDeleteVehicle() throws Exception {
         Vehicle selected = tabVehicules.getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -935,6 +1116,11 @@ public class InterfaceController {
         clearVehicleForm();
     }
 
+    // ----------------------------
+    //     UTILITAIRE D'ERREUR
+    // ----------------------------
+
+    /** Affiche un message d'erreur à l'utilisateur. */
     private void showError(String msg) {
         Alert a = new Alert(Alert.AlertType.ERROR);
         a.setTitle("Erreur");
@@ -943,7 +1129,14 @@ public class InterfaceController {
         a.showAndWait();
     }
 
-    // --- AFFECTATION ---
+    // ----------------------------
+    //         AFFECTATIONS
+    // ----------------------------
+
+    /**
+     * Ligne "UI" pour la table des affectations.
+     * structure plus riche que l'entité Assignment (qui contient juste des ids).
+     */
     public record AssignmentRow(
             long assignmentId,
             long agentId,
@@ -957,24 +1150,33 @@ public class InterfaceController {
             String status
     ) {}
 
+    /**
+     * Initialise la liste des affectations :
+     * - colonnes
+     * - activation/désactivation des boutons selon le statut
+     * - recherche et navigation vers agent/véhicule
+     */
     private void initAffectationsUi() {
         colLAAgent.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().agent()));
         colLAVehicule.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().vehicule()));
         colLAImmat.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().immat()));
         colLAStatus.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().status()));
+
         colLADateDemande.setCellValueFactory(c ->
                 new SimpleStringProperty(c.getValue().dateDemande() == null ? "" : c.getValue().dateDemande().format(df)));
         colLADateDepart.setCellValueFactory(c ->
                 new SimpleStringProperty(c.getValue().dateDepart() == null ? "" : c.getValue().dateDepart().format(df)));
+
+        // Date retour
         colLADateRetour.setCellValueFactory(c -> {
             var r = c.getValue();
             if (r.dateRetour() != null) return new SimpleStringProperty(r.dateRetour().format(df));
-            if ("EN_COURS".equalsIgnoreCase(r.status())) return new SimpleStringProperty("EN COURS");
             return new SimpleStringProperty(""); // DEMANDEE / REFUSEE sans date retour
         });
 
         tabListeAffectations.setItems(affectations);
 
+        // Selon la ligne sélectionnée, activer les boutons accept/cloturer
         tabListeAffectations.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> {
             boolean isDemande = n != null && "DEMANDEE".equalsIgnoreCase(n.status());
             boolean isEnCours = n != null && "EN_COURS".equalsIgnoreCase(n.status());
@@ -982,14 +1184,15 @@ public class InterfaceController {
             btnAccepter.setDisable(!isDemande);
             btnCloturer.setDisable(!(isDemande || isEnCours));
         });
+
         btnAccepter.setDisable(true);
         btnCloturer.setDisable(true);
 
-
-        // boutons
+        // recherche (bouton + Enter)
         btnGoVehicule.setOnAction(e -> reloadAffectations());
-        tfChercherVehicule.setOnAction(e -> reloadAffectations()); // Enter dans le champ
+        tfChercherVehicule.setOnAction(e -> reloadAffectations());
 
+        // navigation depuis une affectation vers l'agent correspondant
         btnVoirAgent.setOnAction(e -> {
             AssignmentRow row = tabListeAffectations.getSelectionModel().getSelectedItem();
             if (row == null) { showError("Sélectionne une affectation."); return; }
@@ -999,6 +1202,7 @@ public class InterfaceController {
             selectAgentById(row.agentId());
         });
 
+        // navigation depuis une affectation vers le véhicule correspondant
         btnVoirVehicule.setOnAction(e -> {
             AssignmentRow row = tabListeAffectations.getSelectionModel().getSelectedItem();
             if (row == null) { showError("Sélectionne une affectation."); return; }
@@ -1008,11 +1212,13 @@ public class InterfaceController {
             selectVehicleById(row.vehicleId());
         });
 
+        // actions métier sur affectation
         btnAccepter.setOnAction(e -> {
             try { onAccepterAffectation(); }
             catch (Exception ex) { showError(ex.getMessage()); }
         });
 
+        // Ici "cloturer" sert à refuser une demande OU clôturer une affectation en cours
         btnCloturer.setOnAction(e -> {
             try { onRefuserAffectation(); }
             catch (Exception ex) { showError(ex.getMessage()); }
@@ -1021,6 +1227,7 @@ public class InterfaceController {
         reloadAffectations();
     }
 
+    /** Recharge la table des affectations en appliquant le filtre texte véhicule. */
     private void reloadAffectations() {
         try {
             String q = tfChercherVehicule.getText() == null ? "" : tfChercherVehicule.getText().trim();
@@ -1030,6 +1237,7 @@ public class InterfaceController {
         }
     }
 
+    /** Sélectionne un agent dans la table principale Agents à partir de son id. */
     private void selectAgentById(long id) {
         for (Agent a : agents) {
             if (a.id() == id) {
@@ -1040,6 +1248,7 @@ public class InterfaceController {
         }
     }
 
+    /** Sélectionne un véhicule dans la table principale Véhicules à partir de son id. */
     private void selectVehicleById(long id) {
         for (Vehicle v : vehicles) {
             if (v.id() == id) {
@@ -1050,6 +1259,11 @@ public class InterfaceController {
         }
     }
 
+    /**
+     * Accepte une demande d'affectation :
+     * - assignment : DEMANDEE -> EN_COURS
+     * - vehicle    : DISPONIBLE -> AFFECTE
+     */
     private void onAccepterAffectation() throws Exception {
         AssignmentRow row = tabListeAffectations.getSelectionModel().getSelectedItem();
         if (row == null) { showError("Sélectionne une affectation."); return; }
@@ -1063,6 +1277,12 @@ public class InterfaceController {
         reloadVehicles();
     }
 
+    /**
+     * Refuse une demande OU clôture une affectation en cours :
+     * - Si DEMANDEE : status -> REFUSEE + end_date
+     * - Si EN_COURS : status -> CLOTUREE + end_date
+     * Dans les deux cas, le véhicule redevient DISPONIBLE.
+     */
     private void onRefuserAffectation() throws Exception {
         AssignmentRow row = tabListeAffectations.getSelectionModel().getSelectedItem();
         LocalDate end = LocalDate.now();
@@ -1075,7 +1295,6 @@ public class InterfaceController {
         String status = row.status();
 
         if ("DEMANDEE".equalsIgnoreCase(status)) {
-
             // Cas normal : on refuse une demande
             boolean ok = assignmentDao.refuseDemande(row.assignmentId(), end);
             if (!ok) {
@@ -1087,7 +1306,6 @@ public class InterfaceController {
             vehicleDao.updateStatus(row.vehicleId(), VehicleStatus.DISPONIBLE);
 
         } else if ("EN_COURS".equalsIgnoreCase(status)) {
-
             // Cas spécial : on clôture une affectation en cours
             boolean ok = assignmentDao.cloturerEnCours(row.assignmentId(), end);
             if (!ok) {
@@ -1106,41 +1324,62 @@ public class InterfaceController {
         reloadVehicles();
     }
 
+    // ----------------------------
+    //           CALENDRIER
+    // ----------------------------
 
-
-    // --- CALENDAR ---
+    /**
+     * Ouvre le calendrier (CalendarFX).
+     * On ne crée la vue qu'une seule fois (lazy loading).
+     */
     @FXML
     private void ouvrirCalendrier() {
-
         if (calendarRoot == null) {
             calendarRoot = creerCalendarView();
             calendarContainer.getChildren().add(calendarRoot);
         }
 
+        // On masque le dashboard et on affiche le calendrier
         paneDashboardVehicules.setVisible(false);
         calendarContainer.setVisible(true);
 
+        // Ici on masque les boutons de navigation pour un mode "plein écran"
         btnBack.setVisible(false);
         btnHome.setVisible(false);
         svgBack.setVisible(false);
         svgHome.setVisible(false);
     }
 
+    /**
+     * Construit la vue du calendrier (CalendarFX) et ajoute un bouton "Retour".
+     *
+     * - Crée un calendrier logique ("Réservations")
+     * - Lance le chargement des affectations depuis la base
+     * - Crée la vue graphique CalendarView
+     * - Désactive certaines fonctionnalités inutiles (ajout / impression)
+     * - Encapsule le tout dans un BorderPane avec un bouton Retour
+     */
     private Parent creerCalendarView() {
-
+        // Calendrier logique contenant les réservations
         Calendar calendar = new Calendar("Réservations");
         calendar.setStyle(Calendar.Style.STYLE1);
+
+        // Chargement asynchrone des réservations depuis la base
         chargerReservations(calendar);
 
+        // Source de calendriers (obligatoire pour CalendarView)
         CalendarSource source = new CalendarSource("BDD");
         source.getCalendars().add(calendar);
 
+        // Vue graphique du calendrier
         CalendarView calendarView = new CalendarView();
         calendarView.getCalendarSources().add(source);
 
+        // On enlève certaines options de l'UI CalendarFX
         calendarView.setShowAddCalendarButton(false);
         calendarView.setShowPrintButton(false);
 
+        // Bouton retour vers le dashboard véhicules
         Button btnRetour = new Button("Retour");
         btnRetour.setOnAction(e -> {
             calendarContainer.setVisible(false);
@@ -1151,6 +1390,7 @@ public class InterfaceController {
             svgHome.setVisible(true);
         });
 
+        // Assemblage final
         BorderPane root = new BorderPane();
         root.setTop(btnRetour);
         root.setCenter(calendarView);
@@ -1158,45 +1398,86 @@ public class InterfaceController {
         return root;
     }
 
+    /**
+     * Charge les affectations depuis la base en tâche asynchrone,
+     * puis les convertit en "Entry" CalendarFX.
+     *
+     * On utilise AssignmentRow (jointure agent + véhicule) afin d'avoir
+     * directement les libellés à afficher dans le calendrier
+     * (nom de l'agent, véhicule, immatriculation).
+     *
+     * Le chargement se fait dans un Task pour ne pas bloquer le thread JavaFX.
+     */
     private void chargerReservations(Calendar calendar) {
 
-            Task<List<Assignment>> task = new Task<>() {
-                @Override
-                protected List<Assignment> call() {
-                    try {
-                        return new AssignmentDao(conn).findAll();
-                    }catch(SQLException ex){
-                        System.out.println(ex.getMessage());
-                        List<Assignment> lst = new ArrayList<>();
-                        return lst;
-                    }
+        Task<List<AssignmentRow>> task = new Task<>() {
+            @Override
+            protected List<AssignmentRow> call() {
+                try {
+                    // "" = pas de filtre : on charge toutes les affectations
+                    return assignmentDao.findRowsForUi("");
+                } catch (SQLException ex) {
+                    System.out.println(ex.getMessage());
+                    return new ArrayList<>();
                 }
-            };
+            }
+        };
 
-            task.setOnSucceeded(e -> {
-                for (Assignment a : task.getValue()) {
-                    Entry<?> entry = convertirEnEntry(a);
-                    calendar.addEntry(entry);
-                }
-            });
+        task.setOnSucceeded(e -> {
+            // Nettoyage pour éviter les doublons si le calendrier est rouvert
+            calendar.clear();
 
-            task.setOnFailed(e -> task.getException().printStackTrace());
+            // Conversion de chaque affectation en Entry CalendarFX
+            for (AssignmentRow row : task.getValue()) {
+                calendar.addEntry(convertirEnEntry(row));
+            }
+        });
 
-            new Thread(task).start();
+        task.setOnFailed(e -> task.getException().printStackTrace());
+
+        new Thread(task).start();
     }
 
-    private Entry<?> convertirEnEntry(Assignment a) {
+    /**
+     * Convertit une ligne d'affectation (AssignmentRow) en Entry CalendarFX.
+     *
+     * - Le titre affiche : "Agent - Véhicule (Immatriculation)"
+     * - La période est basée sur dateDepart / dateRetour
+     * - Si la date de retour est absente, l'événement est limité à un seul jour
+     * - L'id de l'affectation est stocké dans l'Entry (userObject)
+     */
+    private Entry<?> convertirEnEntry(AssignmentRow r) {
+        // Titre affiché dans le calendrier
+        String title = r.agent() + " - " + r.vehicule() + " (" + r.immat() + ")";
 
-        Entry<?> entry = new Entry<>("Réservation #" + a.vehicleId());
+        Entry<Long> entry = new Entry<>(title);
 
-        entry.setInterval(
-                a.startDate(),
-                a.endDate()
-        );
+        // Détermination de la date de début
+        LocalDate start = r.dateDepart();           // prioritaire
+        if (start == null) start = r.dateDemande(); // fallback
+        if (start == null) start = LocalDate.now(); // sécurité
+
+        // Détermination de la date de fin
+        LocalDate end = (r.dateRetour() == null) ? start : r.dateRetour();
+        if (end.isBefore(start)) end = start;
+
+        entry.setInterval(start, end);
+
+        // Stockage de l'id métier
+        entry.setUserObject(r.assignmentId());
+
         return entry;
     }
 
-    // --- ETAT VEHICULE ---
+
+    // ----------------------------
+    //         ETAT VEHICULE
+    // ----------------------------
+
+    /**
+     * Charge les états depuis la base et remplit comboEtat.
+     * Met aussi à jour le cache etatIdToName.
+     */
     private void initVehiculeEtat() {
         try {
             List<Etat> etats = etatDao.findAll();

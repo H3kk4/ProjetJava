@@ -12,6 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * DAO pour accéder à la table "assignment" (affectations).
+ * Permet de créer, lire et mettre à jour l'état d'une affectation.
+ */
 public final class AssignmentDao {
     private final Connection conn;
 
@@ -19,6 +23,10 @@ public final class AssignmentDao {
         this.conn = conn;
     }
 
+    /**
+     * Crée une affectation (vehicle -> agent) entre deux dates.
+     * endDate peut être null (affectation active).
+     */
     public Assignment create(long vehicleId, long agentId, LocalDate startDate, LocalDate endDate) throws SQLException {
         String sql = """
       INSERT INTO assignment(vehicle_id, agent_id, start_date, end_date)
@@ -29,6 +37,8 @@ public final class AssignmentDao {
             ps.setLong(1, vehicleId);
             ps.setLong(2, agentId);
             ps.setDate(3, Date.valueOf(startDate));
+
+            // Si endDate est null, on stocke NULL en base
             if (endDate == null) ps.setNull(4, java.sql.Types.DATE);
             else ps.setDate(4, Date.valueOf(endDate));
 
@@ -39,6 +49,9 @@ public final class AssignmentDao {
         }
     }
 
+    /**
+     * Trouve une affectation par id.
+     */
     public Optional<Assignment> findById(long id) throws SQLException {
         String sql = "SELECT id, vehicle_id, agent_id, start_date, end_date FROM assignment WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -50,6 +63,10 @@ public final class AssignmentDao {
         }
     }
 
+    /**
+     * Retourne l'affectation active d'un véhicule (end_date = NULL).
+     * @return Optional.empty() si aucune affectation active
+     */
     public Optional<Assignment> findActiveByVehicle(long vehicleId) throws SQLException {
         String sql = """
       SELECT id, vehicle_id, agent_id, start_date, end_date
@@ -68,6 +85,9 @@ public final class AssignmentDao {
         }
     }
 
+    /**
+     * Liste toutes les affectations (les plus récentes en premier).
+     */
     public List<Assignment> findAll() throws SQLException {
         String sql = "SELECT id, vehicle_id, agent_id, start_date, end_date FROM assignment ORDER BY start_date DESC";
         try (PreparedStatement ps = conn.prepareStatement(sql);
@@ -78,6 +98,9 @@ public final class AssignmentDao {
         }
     }
 
+    /**
+     * Liste les affectations d'un agent.
+     */
     public List<Assignment> findByAgent(long agentId) throws SQLException {
         String sql = """
       SELECT id, vehicle_id, agent_id, start_date, end_date
@@ -95,6 +118,9 @@ public final class AssignmentDao {
         }
     }
 
+    /**
+     * Liste les affectations d'un véhicule.
+     */
     public List<Assignment> findByVehicle(long vehicleId) throws SQLException {
         String sql = """
       SELECT id, vehicle_id, agent_id, start_date, end_date
@@ -112,6 +138,10 @@ public final class AssignmentDao {
         }
     }
 
+    /**
+     * Termine une affectation en mettant une end_date (seulement si elle était active).
+     * @return true si la ligne a été mise à jour
+     */
     public boolean endAssignment(long assignmentId, LocalDate endDate) throws SQLException {
         String sql = "UPDATE assignment SET end_date = ? WHERE id = ? AND end_date IS NULL";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -121,6 +151,10 @@ public final class AssignmentDao {
         }
     }
 
+    /**
+     * Mapping SQL -> objet Assignment.
+     * Gestion de end_date potentiellement NULL.
+     */
     private static Assignment map(ResultSet rs) throws SQLException {
         LocalDate start = rs.getDate("start_date").toLocalDate();
         Date endSql = rs.getDate("end_date");
@@ -135,6 +169,10 @@ public final class AssignmentDao {
         );
     }
 
+    /**
+     * Prépare des lignes prêtes pour l'UI (jointure assignment + agent + vehicle),
+     * avec une recherche possible sur plaque / marque / modèle.
+     */
     public List<com.floteo.ui.InterfaceController.AssignmentRow> findRowsForUi(String plateOrText) throws SQLException {
         String sql = """
         SELECT
@@ -168,11 +206,14 @@ public final class AssignmentDao {
 
             try (ResultSet rs = ps.executeQuery()) {
                 List<com.floteo.ui.InterfaceController.AssignmentRow> out = new ArrayList<>();
+
                 while (rs.next()) {
+                    // Conversion des dates SQL vers LocalDate
                     LocalDate start = rs.getDate("start_date").toLocalDate();
                     Date endSql = rs.getDate("end_date");
                     LocalDate end = (endSql == null) ? null : endSql.toLocalDate();
 
+                    // Construction de champs "affichables" pour l'UI
                     String agent = rs.getString("last_name") + " " + rs.getString("first_name");
                     String vehicule = rs.getString("brand") + " " + rs.getString("model");
                     String plate = rs.getString("plate");
@@ -196,6 +237,9 @@ public final class AssignmentDao {
         }
     }
 
+    /**
+     * Retourne l'affectation active d'un agent (end_date = NULL).
+     */
     public Optional<Assignment> findActiveByAgent(long agentId) throws SQLException {
         String sql = """
         SELECT id, vehicle_id, agent_id, start_date, end_date
@@ -213,6 +257,9 @@ public final class AssignmentDao {
         }
     }
 
+    /**
+     * Accepte une demande : passe de DEMANDEE -> EN_COURS.
+     */
     public boolean accept(long assignmentId) throws SQLException {
         String sql = """
       UPDATE assignment
@@ -225,6 +272,9 @@ public final class AssignmentDao {
         }
     }
 
+    /**
+     * Refuse une demande : status = REFUSEE et on fixe la end_date.
+     */
     public boolean refuseDemande(long assignmentId, LocalDate end) throws SQLException {
         String sql = """
         UPDATE assignment
@@ -238,6 +288,9 @@ public final class AssignmentDao {
         }
     }
 
+    /**
+     * Clôture une affectation en cours : EN_COURS -> CLOTUREE + end_date.
+     */
     public boolean cloturerEnCours(long assignmentId, LocalDate end) throws SQLException {
         String sql = """
         UPDATE assignment
@@ -251,4 +304,8 @@ public final class AssignmentDao {
         }
     }
 
+    // helper pour éviter de répéter out.add(map(rs)) dans deux méthodes
+    private static void returnListAdd(List<Assignment> out, ResultSet rs) throws SQLException {
+        out.add(map(rs));
+    }
 }
